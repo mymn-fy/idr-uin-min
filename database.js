@@ -351,91 +351,59 @@ async function searchDocuments(db, query, limit = 20) {
 }
 
 // Search documents dengan FTS5 (Full Text Search dengan ranking)
+// Ganti fungsi searchDocumentsWithFTS yang lama dengan ini:
 async function searchDocumentsWithFTS(db, query, typeFilter, page = 1, limit = 10, sortBy = 'relevance') {
-  const asyncDb = promisifyDb(db);
-  
   try {
     const offset = (page - 1) * limit;
+    let params = [];
+    let whereClauses = [];
 
-    // Jika query kosong, gunakan standar SELECT (tanpa algoritma MATCH FTS5)
-    if (!query || query.trim() === '') {
-      let baseSql = `FROM documents WHERE 1=1`;
-      const params = [];
-
-      if (typeFilter && typeFilter !== 'all') {
-        baseSql += ` AND type = ?`;
-        params.push(typeFilter);
-      }
-
-      let orderByClause = 'ORDER BY created_at DESC'; // default
-      if (sortBy === 'newest') {
-        orderByClause = 'ORDER BY created_at DESC';
-      }
-
-      const countSql = `SELECT COUNT(*) as total ${baseSql}`;
-      const countResult = await asyncDb.get(countSql, params);
-      const total = countResult ? parseInt(countResult.total) : 0;
-
-      const dataSql = `
-        SELECT id, title, link, description, content, category, type, author, year, created_at, 0 as relevance_score
-        ${baseSql} ${orderByClause} LIMIT ? OFFSET ?`;
-      const results = await asyncDb.all(dataSql, [...params, limit, offset]);
-
-      return { results, total, page, totalPages: Math.ceil(total / limit) };
+    // 1. Logika Pencarian (Query)
+    if (query && query.trim() !== '') {
+      params.push(`%${query.trim()}%`);
+      whereClauses.push(`(title ILIKE $${params.length} OR content ILIKE $${params.length} OR description ILIKE $${params.length})`);
     }
 
-    // FTS5 query dengan OR operator untuk pencarian lebih luas
-    // Escape quotes dan prepare query
-    const ftsQuery = query
-      .trim()
-      .replace(/"/g, '""')
-      .split(/\s+/)
-      .join(' OR ');
-
-    let baseSql = `
-       FROM documents_fts as fts
-       JOIN documents as d ON fts.rowid = d.id
-       WHERE documents_fts MATCH ?
-    `;
-    const params = [ftsQuery];
-
-    // Tambahkan filter tipe jika ada (digunakan server.js saat passing typeFilter)
+    // 2. Logika Filter Tipe
     if (typeFilter && typeFilter !== 'all') {
-      baseSql += ' AND d.type = ?';
       params.push(typeFilter);
+      whereClauses.push(`type = $${params.length}`);
     }
 
-    // Tentukan klausa ORDER BY berdasarkan parameter sortBy
-    let orderByClause = 'ORDER BY fts.rank'; // Default: urutkan berdasarkan relevansi
-    if (sortBy === 'newest') {
-      orderByClause = 'ORDER BY d.created_at DESC';
+    const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+    // 3. Hitung Total Data (PENTING untuk Pagination)
+    const countSql = `SELECT COUNT(*) as total FROM documents ${whereSql}`;
+    const countRes = await db.query(countSql, params);
+    const total = parseInt(countRes.rows[0].total);
+
+    // 4. Tentukan Urutan (Sort)
+    let orderBy = 'ORDER BY created_at DESC'; // default newest
+    if (sortBy === 'relevance' && query) {
+      // Prioritaskan yang judulnya mirip di awal
+      orderBy = `ORDER BY (CASE WHEN title ILIKE $1 THEN 1 ELSE 2 END), created_at DESC`;
     }
 
-    // 1. Hitung total data untuk meta pagination
-    const countSql = `SELECT COUNT(*) as total ${baseSql}`;
-    const countResult = await asyncDb.get(countSql, params);
-    const total = countResult ? parseInt(countResult.total) : 0;
-
-    // 2. Ambil hasil query dengan FULLTEXT search & prepared statements
+    // 5. Ambil Data dengan Limit & Offset
     const dataSql = `
-      SELECT 
-        d.id, d.title, d.link, d.description, d.content, 
-        d.category, d.type, d.author, d.year, d.created_at,
-        CAST(fts.rank AS REAL) as relevance_score
-      ${baseSql} ${orderByClause} LIMIT ? OFFSET ?`;
-    const results = await asyncDb.all(dataSql, [...params, limit, offset]);
-
+      SELECT id, title, link, description, content, category, type, author, year, created_at
+      FROM documents 
+      ${whereSql} 
+      ${orderBy} 
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+    
+    const dataRes = await db.query(dataSql, params);
+    
     return {
-      results,
-      total,
-      page,
+      results: dataRes.rows,
+      total: total,
+      page: page,
       totalPages: Math.ceil(total / limit)
     };
   } catch (error) {
-    console.error('❌ Error searching with FTS:', error);
-    // Return fallback result dalam format yang sama
-    const fallback = await searchDocuments(db, query, limit);
-    return { results: fallback, total: fallback.length, page: 1, totalPages: 1 };
+    console.error('❌ Error searching with PostgreSQL:', error);
+    return { results: [], total: 0, page: 1, totalPages: 0 };
   }
 }
 

@@ -1,77 +1,290 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Search Engine - idr.uin-antasari.ac.id</title>
+  <title>IDR UIN Antasari — Repositori Akademik</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
   <link rel="stylesheet" href="./css/style.css">
+<base target="_blank">
 </head>
 <body>
-  <div class="container">
-    <!-- Header -->
-    <header class="header">
-      <h1>Mesin Pencari UIN Antasari</h1>
-      <p>Cari informasi dari situs idr.uin-antasari.ac.id</p>
-      <button id="syncBtn" style="margin-top: 15px; padding: 8px 16px; background: #fff; color: #667eea; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 10px rgba(0,0,0,0.1); transition: 0.2s;">🔄 Sinkronisasi Data Baru</button>
-    </header>
+  <!-- Mobile Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <!-- Search Form -->
-    <div class="search-section">
-      <form id="searchForm" class="search-form">
-        <input 
-          type="text" 
-          id="searchInput" 
-          class="search-input" 
-          placeholder="Masukkan kata kunci pencarian..." 
-          autocomplete="off"
-        >
-        <button type="submit" class="search-btn">Cari</button>
-      </form>
-      <div id="suggestion" class="suggestion"></div>
-
-      <!-- Filters -->
-      <div class="filters">
-        <select id="typeFilter" name="type" class="filter-select">
-          <option value="all">Semua Tipe</option>
-          <option value="Artikel">Artikel</option>
-          <option value="Monografi">Monografi</option>
-          <option value="Laporan Penelitian">Laporan Penelitian</option>
-          <option value="Konferensi">Konferensi</option>
-          <option value="Skripsi">Skripsi</option>
-          <option value="Tesis">Tesis</option>
-          <option value="Disertasi">Disertasi</option>
-          <option value="Lainnya">Lainnya</option>
-        </select>
-        <select id="sortFilter" name="sort" class="filter-select">
-          <option value="relevance" selected>Paling Relevan</option>
-          <option value="newest">Paling Baru</option>
-        </select>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+  <a href="/" class="logo">
+  <img src="/logo-uin.png" alt="IDR UIN Antasari" class="logo-img">
+  <div class="logo-text">
+    <span class="logo-title">IDR UIN</span>
+    <span class="logo-subtitle">Antasari</span>
+  </div>
+</a>
+  
+  <div class="sidebar-controls">
+    <button class="sidebar-toggle desktop-only" id="sidebarToggle" aria-label="Toggle sidebar">
+      <span class="material-symbols-rounded">chevron_left</span>
+    </button>
+    
+    <!-- Control Menu -->
+    <div class="control-menu desktop-only" id="controlMenu">
+      <button class="control-menu-btn" id="controlMenuBtn" aria-label="Sidebar control">
+        <span class="material-symbols-rounded">expand_more</span>
+      </button>
+      <div class="control-menu-panel" id="controlMenuPanel">
+        <div class="control-menu-header">Sidebar control</div>
+        <label class="control-option">
+          <input type="radio" name="sidebarMode" value="expanded">
+          <span class="control-radio"></span>
+          <span class="control-label">Expanded</span>
+        </label>
+        <label class="control-option">
+          <input type="radio" name="sidebarMode" value="collapsed">
+          <span class="control-radio"></span>
+          <span class="control-label">Collapsed</span>
+        </label>
+        <label class="control-option">
+          <input type="radio" name="sidebarMode" value="expandOnHover">
+          <span class="control-radio"></span>
+          <span class="control-label">Expand on hover</span>
+        </label>
       </div>
     </div>
+  </div>
+</div>
 
-    <!-- Results Section -->
-    <div class="results-section">
-      <div id="loading" class="loading" style="display: none;">
-        Sedang mencari...
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-label">Kategori Dokumen</span>
+        <ul class="nav-list">
+          <li class="nav-item active" data-type="all" data-label="Semua Tipe">
+            <span class="material-symbols-rounded nav-icon">apps</span>
+            <span class="nav-text">Semua Tipe</span>
+            <span class="nav-badge" id="badge-all">0</span>
+          </li>
+          <li class="nav-item" data-type="Artikel" data-label="Artikel">
+            <span class="material-symbols-rounded nav-icon">article</span>
+            <span class="nav-text">Artikel</span>
+            <span class="nav-badge" id="badge-Artikel">0</span>
+          </li>
+          <li class="nav-item" data-type="Monografi" data-label="Monografi">
+            <span class="material-symbols-rounded nav-icon">book</span>
+            <span class="nav-text">Monografi</span>
+            <span class="nav-badge" id="badge-Monografi">0</span>
+          </li>
+          <li class="nav-item" data-type="Laporan Penelitian" data-label="Laporan Penelitian">
+            <span class="material-symbols-rounded nav-icon">biotech</span>
+            <span class="nav-text">Laporan Penelitian</span>
+            <span class="nav-badge" id="badge-LaporanPenelitian">0</span>
+          </li>
+          <li class="nav-item" data-type="Konferensi" data-label="Konferensi">
+            <span class="material-symbols-rounded nav-icon">groups</span>
+            <span class="nav-text">Konferensi</span>
+            <span class="nav-badge" id="badge-Konferensi">0</span>
+          </li>
+          <li class="nav-item" data-type="Skripsi" data-label="Skripsi">
+            <span class="material-symbols-rounded nav-icon">menu_book</span>
+            <span class="nav-text">Skripsi</span>
+            <span class="nav-badge" id="badge-Skripsi">0</span>
+          </li>
+          <li class="nav-item" data-type="Tesis" data-label="Tesis">
+            <span class="material-symbols-rounded nav-icon">workspace_premium</span>
+            <span class="nav-text">Tesis</span>
+            <span class="nav-badge" id="badge-Tesis">0</span>
+          </li>
+          <li class="nav-item" data-type="Disertasi" data-label="Disertasi">
+            <span class="material-symbols-rounded nav-icon">verified</span>
+            <span class="nav-text">Disertasi</span>
+            <span class="nav-badge" id="badge-Disertasi">0</span>
+          </li>
+          <li class="nav-item" data-type="Lainnya" data-label="Lainnya">
+            <span class="material-symbols-rounded nav-icon">more_horiz</span>
+            <span class="nav-text">Lainnya</span>
+            <span class="nav-badge" id="badge-Lainnya">0</span>
+          </li>
+        </ul>
       </div>
-      
-      <div id="resultInfo" class="result-info" style="display: none;"></div>
-      
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="sync-btn" id="syncBtn">
+        <span class="material-symbols-rounded sync-icon">sync</span>
+        <span class="nav-text">Sinkronisasi Data</span>
+      </button>
+      <div class="sidebar-meta">
+        <span class="nav-text">IDR UIN Antasari</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content" id="mainContent">
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="header-left">
+        <button class="icon-btn mobile-only" id="mobileMenuBtn" aria-label="Menu">
+          <span class="material-symbols-rounded">menu</span>
+        </button>
+        <div class="search-wrapper">
+          <span class="material-symbols-rounded search-icon">search</span>
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Cari judul, penulis, atau kata kunci..." 
+            autocomplete="off"
+          >
+          <button class="clear-search" id="clearSearch" aria-label="Clear search">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="icon-btn theme-toggle" id="themeToggle" aria-label="Toggle theme">
+          <span class="material-symbols-rounded" id="themeIcon">dark_mode</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <div class="content-area">
+      <!-- Stats Grid -->
+      <div class="stats-grid" id="statsGrid">
+  <div class="stat-card">
+    <div class="stat-icon" style="background: rgba(99, 102, 241, 0.15); color: #6366f1;">
+      <span class="material-symbols-rounded">description</span>
+    </div>
+    <div class="stat-info">
+      <span class="stat-value" id="statTotal">—</span>
+      <span class="stat-label">Total Dokumen</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+      <span class="material-symbols-rounded">category</span>
+    </div>
+    <div class="stat-info">
+      <span class="stat-value" id="statCategories">9</span>
+      <span class="stat-label">Kategori</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
+      <span class="material-symbols-rounded">update</span>
+    </div>
+    <div class="stat-info">
+      <span class="stat-value" id="statLatest">—</span>
+      <span class="stat-label">Update Terakhir</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background: rgba(236, 72, 153, 0.15); color: #ec4899;">
+      <span class="material-symbols-rounded">database</span>
+    </div>
+    <div class="stat-info">
+      <span class="stat-value" id="statStatus">Online</span>
+      <span class="stat-label">Status DB</span>
+    </div>
+  </div>
+</div>
+
+      <!-- Results Toolbar -->
+      <div class="results-toolbar" id="resultsToolbar">
+        <div class="results-info" id="resultInfo"></div>
+        <div class="results-actions">
+          <div class="custom-select" id="sortFilterWrapper">
+  <button class="custom-select-trigger" id="sortFilterTrigger">
+    <span class="custom-select-value">Paling Relevan</span>
+    <span class="material-symbols-rounded custom-select-arrow">expand_more</span>
+  </button>
+  <div class="custom-select-dropdown" id="sortFilterDropdown">
+    <div class="custom-select-option active" data-value="relevance">
+      <span class="material-symbols-rounded">sort</span>
+      <span>Paling Relevan</span>
+    </div>
+    <div class="custom-select-option" data-value="newest">
+      <span class="material-symbols-rounded">schedule</span>
+      <span>Paling Baru</span>
+    </div>
+  </div>
+</div>
+        </div>
+      </div>
+
+      <!-- Skeleton Loading -->
+      <div id="loading" class="skeleton-container" style="display: none;">
+        <div class="skeleton-card">
+          <div class="skeleton-header">
+            <div class="skeleton-badge"></div>
+            <div class="skeleton-title"></div>
+          </div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-meta"></div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton-header">
+            <div class="skeleton-badge"></div>
+            <div class="skeleton-title"></div>
+          </div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-meta"></div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton-header">
+            <div class="skeleton-badge"></div>
+            <div class="skeleton-title"></div>
+          </div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-meta"></div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton-header">
+            <div class="skeleton-badge"></div>
+            <div class="skeleton-title"></div>
+          </div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-meta"></div>
+        </div>
+      </div>
+
+      <!-- Results -->
       <div id="results" class="results"></div>
-      
-      <div id="noResults" class="no-results" style="display: none;">
-        Tidak ada hasil yang ditemukan.
+
+      <!-- Empty State -->
+      <div id="noResults" class="empty-state" style="display: none;">
+        <div class="empty-icon-wrapper">
+          <span class="material-symbols-rounded">search_off</span>
+        </div>
+        <h3>Tidak ada hasil ditemukan</h3>
+        <p>Coba kata kunci lain, periksa ejaan, atau ubah filter kategori.</p>
       </div>
 
       <!-- Pagination -->
       <div id="pagination" class="pagination" style="display: none;">
-        <button id="prevPage" disabled>Previous</button>
-        <span id="pageInfo">Halaman 1 dari 1</span>
-        <button id="nextPage" disabled>Next</button>
+        <button id="prevPage" class="page-btn" disabled>
+          <span class="material-symbols-rounded">arrow_back</span>
+          <span>Sebelumnya</span>
+        </button>
+        <div class="page-numbers" id="pageNumbers"></div>
+        <button id="nextPage" class="page-btn" disabled>
+          <span>Selanjutnya</span>
+          <span class="material-symbols-rounded">arrow_forward</span>
+        </button>
       </div>
     </div>
-  </div>
+  </main>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
 
   <script src="./js/search.js"></script>
 </body>
