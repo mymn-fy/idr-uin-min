@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search Engine - idr.uin-antasari.ac.id</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1>Mesin Pencari UIN Antasari</h1>
+      <p>Cari informasi dari situs idr.uin-antasari.ac.id</p>
+    </header>
+
+    <!-- Search Form -->
+    <div class="search-section">
+      <form id="searchForm" class="search-form">
+        <input 
+          type="text" 
+          id="searchInput" 
+          class="search-input" 
+          placeholder="Masukkan kata kunci pencarian..." 
+          autocomplete="off"
+        >
+        <button type="submit" class="search-btn">Cari</button>
+      </form>
+      <div id="suggestion" class="suggestion"></div>
+
+      <!-- Filters -->
+      <div class="filters">
+        <select id="typeFilter" name="type" class="filter-select">
+          <option value="all">Semua Tipe</option>
+          <option value="Artikel">Artikel</option>
+          <option value="Monografi">Monografi</option>
+          <option value="Laporan Penelitian">Laporan Penelitian</option>
+          <option value="Konferensi">Konferensi</option>
+          <option value="Skripsi">Skripsi</option>
+          <option value="Tesis">Tesis</option>
+          <option value="Disertasi">Disertasi</option>
+          <option value="Lainnya">Lainnya</option>
+        </select>
+        <select id="sortFilter" name="sort" class="filter-select">
+          <option value="relevance" selected>Paling Relevan</option>
+          <option value="newest">Paling Baru</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="results-section">
+      <div id="loading" class="loading" style="display: none;">
+        Sedang mencari...
+      </div>
+      
+      <div id="resultInfo" class="result-info" style="display: none;"></div>
+      
+      <div id="results" class="results"></div>
+      
+      <div id="noResults" class="no-results" style="display: none;">
+        Tidak ada hasil yang ditemukan.
+      </div>
+
+      <!-- Pagination -->
+      <div id="pagination" class="pagination" style="display: none;">
+        <button id="prevPage" disabled>Previous</button>
+        <span id="pageInfo">Halaman 1 dari 1</span>
+        <button id="nextPage" disabled>Next</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/search.js"></script>
+</body>
+</html>
