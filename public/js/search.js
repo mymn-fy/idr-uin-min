@@ -34,7 +34,7 @@ const state = {
   query: '',
   page: 1,
   sortBy: 'relevance',
-  selectedType: 'all',
+  selectedType: 'Skripsi',
   results: [],
   total: 0,
   totalPages: 0,
