@@ -12,6 +12,7 @@ const paginationDiv = document.getElementById('pagination');
 const prevPageBtn = document.getElementById('prevPage');
 const nextPageBtn = document.getElementById('nextPage');
 const pageInfoSpan = document.getElementById('pageInfo');
+const syncBtn = document.getElementById('syncBtn');
 
 // State Management
 const state = {
@@ -256,3 +257,28 @@ window.addEventListener('load', () => {
   searchInput.focus();
   suggestionDiv.textContent = 'Ketik kata kunci untuk memulai pencarian...';
 });
+
+// Fitur Sinkronisasi Manual (Manual Trigger Vercel Cron)
+if (syncBtn) {
+  syncBtn.addEventListener('click', async () => {
+    syncBtn.disabled = true;
+    const originalText = syncBtn.textContent;
+    syncBtn.textContent = '⏳ Sedang menarik data...';
+    
+    try {
+      const response = await fetch('/api/cron/crawl');
+      const data = await response.json();
+      if (data.success) {
+        alert(`✅ Selesai! ${data.database.inserted} data baru berhasil ditambahkan ke database.`);
+        search(); // Muat ulang hasil pencarian jika ada
+      } else {
+        alert('❌ Gagal menarik data.');
+      }
+    } catch (e) {
+      alert('❌ Terjadi kesalahan koneksi.');
+    } finally {
+      syncBtn.disabled = false;
+      syncBtn.textContent = originalText;
+    }
+  });
+}
