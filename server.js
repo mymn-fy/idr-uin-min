@@ -1,4 +1,7 @@
 require('dotenv').config({ override: true });
+const dns = require('dns');
+// Paksa Node.js menggunakan IPv4 agar terhindar dari blokir/timeout ISP lokal
+dns.setDefaultResultOrder('ipv4first');
 const express = require('express');
 const path = require('path');
 const { scrapePage, scrapeMultiple, crawlWebsite } = require('./scraper');
@@ -163,20 +166,23 @@ app.post('/api/crawl', async (req, res) => {
 app.get('/api/cron/crawl', async (req, res) => {
   try {
     // Catatan Vercel: Limit eksekusi Hobby tier adalah 10 detik!
-    // Kita mengatur max 5 halaman dan delay 0ms agar selesai sebelum kena timeout.
     
-    // Acak URL awal agar tidak merayapi halaman yang itu-itu saja setiap ditekan
     const targets = [
-      'https://idr.uin-antasari.ac.id/view/doctype/skripsi.html',
       'https://idr.uin-antasari.ac.id/view/doctype/thesis.html',
+      'https://idr.uin-antasari.ac.id/view/doctype/skripsi.html',
       'https://idr.uin-antasari.ac.id/view/doctype/article.html',
-      'https://idr.uin-antasari.ac.id/view/doctype/laporan=5Fpenelitian.html'
+      'https://idr.uin-antasari.ac.id/view/doctype/monograph.html',
+      'https://idr.uin-antasari.ac.id/view/doctype/laporan=5Fpenelitian.html',
+      'https://idr.uin-antasari.ac.id/view/doctype/conference=5Fitem.html',
+      'https://idr.uin-antasari.ac.id/view/doctype/disertasi.html',
+      'https://idr.uin-antasari.ac.id/view/doctype/book.html',
+      'https://idr.uin-antasari.ac.id/view/doctype/other.html'
     ];
-    const targetUrl = targets[Math.floor(Math.random() * targets.length)];
     
-    console.log(`⏳ Menjalankan Vercel Cron Job dari: ${targetUrl}...`);
+    console.log(`⏳ Menjalankan Vercel Cron Job untuk ${targets.length} kategori utama...`);
     
-    const crawlResults = await crawlWebsite(targetUrl, 8, 0); // Naikkan dari 5 ke 8 halaman
+    // Gunakan scrapeMultiple (Sniper) sebagai ganti crawlWebsite (Laba-laba) agar tidak nyasar
+    const crawlResults = await scrapeMultiple(targets, 0);
     const insertResults = await db_module.insertDocuments(db, crawlResults);
     
     console.log(`✅ Cron Selesai: ${insertResults.inserted} tersimpan.`);

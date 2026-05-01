@@ -246,16 +246,6 @@ async function insertDocument(db, data) {
       [data.title, data.link, data.description || '', data.content || '', data.category || null, data.type || 'Lainnya', data.author || '', data.year || '']
     );
 
-    // Insert ke FTS table
-    try {
-      await asyncDb.run(
-        `INSERT INTO documents_fts (rowid, title, content) VALUES (?, ?, ?)`,
-        [result.id, data.title, data.content || '']
-      );
-    } catch (ftsError) {
-      console.warn(`⚠️  FTS insert warning: ${ftsError.message}`);
-    }
-
     console.log(`✓ Document inserted: ${data.title} (ID: ${result.id})`);
     return { success: true, id: result.id };
   } catch (error) {
@@ -275,8 +265,20 @@ async function insertDocuments(db, documents) {
     details: []
   };
 
+  const total = documents.length;
+  if (total > 0) {
+    console.log(`\n⏳ Mulai menyinkronkan ${total} data ke Supabase... (Ini mungkin memakan waktu belasan menit)`);
+  }
+
   try {
-    for (const doc of documents) {
+    for (let i = 0; i < total; i++) {
+      const doc = documents[i];
+      
+      // Tampilkan progress setiap 500 data agar tidak terlihat macet
+      if ((i + 1) % 500 === 0 || i + 1 === total) {
+        console.log(`   ➔ Progress: [${i + 1}/${total}] data telah diproses...`);
+      }
+
       try {
         // Validasi
         if (!doc.title || !doc.link) {
@@ -307,16 +309,6 @@ async function insertDocuments(db, documents) {
            VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
           [doc.title, doc.link, doc.description || '', doc.content || '', doc.category || null, doc.type || 'Lainnya', doc.author || '', doc.year || '']
         );
-
-        // Insert ke FTS table
-        try {
-          await asyncDb.run(
-            `INSERT INTO documents_fts (rowid, title, content) VALUES (?, ?, ?)`,
-            [result.id, doc.title, doc.content || '']
-          );
-        } catch (ftsError) {
-          console.warn(`⚠️  FTS insert warning for ${doc.title}: ${ftsError.message}`);
-        }
 
         results.inserted++;
         results.details.push({ link: doc.link, status: 'inserted', id: result.id });
