@@ -158,6 +158,26 @@ app.post('/api/crawl', async (req, res) => {
   }
 });
 
+// Vercel Cron Job Endpoint (Berjalan otomatis)
+app.get('/api/cron/crawl', async (req, res) => {
+  try {
+    // Catatan Vercel: Limit eksekusi Hobby tier adalah 10 detik!
+    // Kita mengatur max 5 halaman dan delay 0ms agar selesai sebelum kena timeout.
+    const targetUrl = 'https://idr.uin-antasari.ac.id/view/doctype/skripsi.html'; // Bisa diganti ke thesis.html dsb
+    
+    console.log('⏳ Menjalankan Vercel Cron Job...');
+    
+    const crawlResults = await crawlWebsite(targetUrl, 5, 0);
+    const insertResults = await db_module.insertDocuments(db, crawlResults);
+    
+    console.log(`✅ Cron Selesai: ${insertResults.inserted} tersimpan.`);
+    res.json({ success: true, database: insertResults });
+  } catch (error) {
+    console.error('Cron error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get scraped data endpoint
 app.get('/api/scraped-data', async (req, res) => {
   try {
