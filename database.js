@@ -1,5 +1,4 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+const { Pool } = require('pg');
 
 /**
  * Database Module - Manajemen SQLite untuk Search Engine
@@ -11,48 +10,38 @@ const path = require('path');
  * - Update dan delete
  */
 
-// Database path
-const DB_PATH = path.join(__dirname, 'database', 'search.db');
-
 // Promisify database operations
 function promisifyDb(db) {
   return {
-    run: (sql, params) => {
-      return new Promise((resolve, reject) => {
-        db.run(sql, params, function(err) {
-          if (err) reject(err);
-          else resolve({ id: this.lastID, changes: this.changes });
-        });
-      });
+    run: async (sql, params = []) => {
+      let i = 1;
+      const pgSql = sql.replace(/\?/g, () => `$${i++}`);
+      const res = await db.query(pgSql, params);
+      return { id: res.rows[0]?.id, changes: res.rowCount };
     },
-    get: (sql, params) => {
-      return new Promise((resolve, reject) => {
-        db.get(sql, params, (err, row) => {
-          if (err) reject(err);
-          else resolve(row);
-        });
-      });
+    get: async (sql, params = []) => {
+      let i = 1;
+      const pgSql = sql.replace(/\?/g, () => `$${i++}`);
+      const res = await db.query(pgSql, params);
+      return res.rows[0];
     },
-    all: (sql, params) => {
-      return new Promise((resolve, reject) => {
-        db.all(sql, params, (err, rows) => {
-          if (err) reject(err);
-          else resolve(rows || []);
-        });
-      });
+    all: async (sql, params = []) => {
+      let i = 1;
+      const pgSql = sql.replace(/\?/g, () => `$${i++}`);
+      const res = await db.query(pgSql, params);
+      return res.rows;
     }
   };
 }
 
 // Initialize database connection
 function initConnection() {
-  return new sqlite3.Database(DB_PATH, (err) => {
-    if (err) {
-      console.error('❌ Error membuka database:', err);
-    } else {
-      console.log('✓ Database connected');
-    }
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
   });
+  console.log('✓ Supabase PostgreSQL connected');
+  return pool;
 }
 
 // Initialize database tables

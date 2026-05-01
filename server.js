@@ -206,15 +206,19 @@ app.get('/api/statistics', async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`Server running di http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running di http://localhost:${PORT}`);
+  });
+}
 
 // Graceful shutdown
 process.on('SIGINT', () => {
-  db.close((err) => {
-    if (err) console.error('Error closing database:', err);
-    console.log('Database closed');
+  db.end(() => {
+    console.log('PostgreSQL pool closed');
     process.exit(0);
   });
 });
+
+// Export untuk Vercel Serverless
+module.exports = app;
