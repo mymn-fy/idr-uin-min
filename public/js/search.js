@@ -163,8 +163,8 @@ function renderResults() {
   // Handle Empty Results State
   if (state.results.length === 0) {
     noResultsDiv.style.display = 'block';
-    resultInfoDiv.textContent = state.query ? `Tidak ada hasil untuk "${state.query}"` : 'Tidak ada hasil yang ditemukan.';
-    resultInfoDiv.style.display = 'block';
+    noResultsDiv.textContent = state.query ? `Tidak ada hasil untuk "${state.query}"` : 'Tidak ada hasil yang ditemukan.';
+    resultInfoDiv.style.display = 'none';
     return;
   }
 

@@ -1,3 +1,4 @@
+require('dotenv').config({ override: true });
 const express = require('express');
 const path = require('path');
 const { scrapePage, scrapeMultiple, crawlWebsite } = require('./scraper');
