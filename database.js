@@ -82,18 +82,18 @@ async function initDatabase(db) {
       await asyncDb.run('ALTER TABLE documents ADD COLUMN category TEXT');
       console.log('✓ Column "category" added for migration.');
     } catch (error) {
-      // Abaikan error jika kolom sudah ada
-      if (!error.message.includes('duplicate column name')) {
+      // Abaikan error jika kolom sudah ada (SQLite: duplicate column name, PostgreSQL: already exists)
+      if (!error.message.includes('duplicate column name') && !error.message.includes('already exists')) {
         console.error('Migration error:', error);
       }
     }
 
     // Coba tambahkan kolom 'type' jika belum ada (untuk migrasi database lama)
     try {
-      await asyncDb.run('ALTER TABLE documents ADD COLUMN type TEXT DEFAULT "Lainnya"');
+      await asyncDb.run('ALTER TABLE documents ADD COLUMN type TEXT DEFAULT \'Lainnya\'');
       console.log('✓ Column "type" added for migration.');
     } catch (error) {
-      if (!error.message.includes('duplicate column name')) {
+      if (!error.message.includes('duplicate column name') && !error.message.includes('already exists')) {
         console.error('Migration error (type):', error);
       }
     }
@@ -102,14 +102,14 @@ async function initDatabase(db) {
       await asyncDb.run('ALTER TABLE documents ADD COLUMN author TEXT');
       console.log('✓ Column "author" added for migration.');
     } catch (error) {
-      if (!error.message.includes('duplicate column name')) console.error('Migration error (author):', error);
+      if (!error.message.includes('duplicate column name') && !error.message.includes('already exists')) console.error('Migration error (author):', error);
     }
 
     try {
       await asyncDb.run('ALTER TABLE documents ADD COLUMN year TEXT');
       console.log('✓ Column "year" added for migration.');
     } catch (error) {
-      if (!error.message.includes('duplicate column name')) console.error('Migration error (year):', error);
+      if (!error.message.includes('duplicate column name') && !error.message.includes('already exists')) console.error('Migration error (year):', error);
     }
 
     // Update otomatis data lama agar menyesuaikan tipe berdasarkan link-nya
