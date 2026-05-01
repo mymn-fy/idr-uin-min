@@ -1343,19 +1343,32 @@ body {
   }
 
   .results-toolbar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        z-index: 20;
+    }
 
-  .result-header {
-    flex-direction: column;
-    gap: 8px;
-  }
+    /* Buat tombol dropdown jadi lebar penuh di mobile agar mudah ditekan */
+    .custom-select-trigger {
+        width: 100%;
+        justify-content: space-between;
+    }
 
-  .result-badge {
-    align-self: flex-start;
-  }
+    /* Dropdown menu jadi lebar penuh juga */
+    .custom-select-dropdown {
+        width: 100%;
+        left: 0;
+        right: 0;
+        position: absolute; /* Tetap absolute agar melayang di atas kartu */
+    }
+    
+    /* Mencegah kartu hasil pencarian "balapan" z-index dengan dropdown */
+    .result-card {
+        position: relative;
+        z-index: 1;
+    }
+}
 
   .pagination {
     flex-direction: row !important;
