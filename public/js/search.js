@@ -269,7 +269,7 @@ if (syncBtn) {
       const response = await fetch('/api/cron/crawl');
       const data = await response.json();
       if (data.success) {
-        alert(`✅ Selesai! ${data.database.inserted} data baru berhasil ditambahkan ke database.`);
+        alert(`✅ Selesai! ${data.database.inserted} data baru/diupgrade, dan ${data.database.duplicates} data duplikat dilewati.`);
         search(); // Muat ulang hasil pencarian jika ada
       } else {
         alert('❌ Gagal menarik data.');

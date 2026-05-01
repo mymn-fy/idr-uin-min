@@ -163,11 +163,19 @@ app.get('/api/cron/crawl', async (req, res) => {
   try {
     // Catatan Vercel: Limit eksekusi Hobby tier adalah 10 detik!
     // Kita mengatur max 5 halaman dan delay 0ms agar selesai sebelum kena timeout.
-    const targetUrl = 'https://idr.uin-antasari.ac.id/view/doctype/skripsi.html'; // Bisa diganti ke thesis.html dsb
     
-    console.log('⏳ Menjalankan Vercel Cron Job...');
+    // Acak URL awal agar tidak merayapi halaman yang itu-itu saja setiap ditekan
+    const targets = [
+      'https://idr.uin-antasari.ac.id/view/doctype/skripsi.html',
+      'https://idr.uin-antasari.ac.id/view/doctype/thesis.html',
+      'https://idr.uin-antasari.ac.id/view/doctype/article.html',
+      'https://idr.uin-antasari.ac.id/view/doctype/laporan=5Fpenelitian.html'
+    ];
+    const targetUrl = targets[Math.floor(Math.random() * targets.length)];
     
-    const crawlResults = await crawlWebsite(targetUrl, 5, 0);
+    console.log(`⏳ Menjalankan Vercel Cron Job dari: ${targetUrl}...`);
+    
+    const crawlResults = await crawlWebsite(targetUrl, 8, 0); // Naikkan dari 5 ke 8 halaman
     const insertResults = await db_module.insertDocuments(db, crawlResults);
     
     console.log(`✅ Cron Selesai: ${insertResults.inserted} tersimpan.`);
