@@ -382,7 +382,7 @@ async function searchDocumentsWithFTS(db, query, typeFilter, page = 1, limit = 1
 
       const countSql = `SELECT COUNT(*) as total ${baseSql}`;
       const countResult = await asyncDb.get(countSql, params);
-      const total = countResult ? countResult.total : 0;
+      const total = countResult ? parseInt(countResult.total) : 0;
 
       const dataSql = `
         SELECT id, title, link, description, content, category, type, author, year, created_at, 0 as relevance_score
@@ -422,7 +422,7 @@ async function searchDocumentsWithFTS(db, query, typeFilter, page = 1, limit = 1
     // 1. Hitung total data untuk meta pagination
     const countSql = `SELECT COUNT(*) as total ${baseSql}`;
     const countResult = await asyncDb.get(countSql, params);
-    const total = countResult ? countResult.total : 0;
+    const total = countResult ? parseInt(countResult.total) : 0;
 
     // 2. Ambil hasil query dengan FULLTEXT search & prepared statements
     const dataSql = `
@@ -545,7 +545,11 @@ async function getStatistics(db) {
        FROM documents`
     );
 
-    return result;
+    return {
+      total: parseInt(result.total || 0),
+      unique_links: parseInt(result.unique_links || 0),
+      latest_added: result.latest_added
+    };
   } catch (error) {
     console.error('❌ Error getting statistics:', error);
     return { total: 0, unique_links: 0 };

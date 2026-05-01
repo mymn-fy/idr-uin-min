@@ -256,6 +256,7 @@ function escapeHtml(text) {
 window.addEventListener('load', () => {
   searchInput.focus();
   suggestionDiv.textContent = 'Ketik kata kunci untuk memulai pencarian...';
+  search(); // Otomatis load semua data saat halaman dibuka
 });
 
 // Fitur Sinkronisasi Manual (Manual Trigger Vercel Cron)
