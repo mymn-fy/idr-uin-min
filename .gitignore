@@ -4,3 +4,19 @@ database/*.db
 .env
 *.log
 scraped_data_*.json
+
+# Deprecated/Unused Scripts
+cleanup-wrong-data.js
+clear-all-data.js
+scrape-doctypes.js
+scrape-eprints.js
+scrape-and-sync.ps1
+scrape-sync.ps1
+inspect-page.js
+update-author-year.js
+scraper-test.js
+scraper-cli.js
+SCRAPER_GUIDE.js
+
+# Deprecated directories
+database/
