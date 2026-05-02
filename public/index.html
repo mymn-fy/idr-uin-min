@@ -123,7 +123,7 @@
   </aside>
 
   <!-- Main Content -->
-  <main class="main-content" id="mainContent">
+<main class="main-content" id="mainContent">
     <!-- Top Header -->
     <header class="top-header">
       <div class="header-left">
@@ -142,6 +142,75 @@
             <span class="material-symbols-rounded">close</span>
           </button>
         </div>
+        
+        <!-- FILTER BUTTON & DROPDOWN - TAMBAHKAN INI -->
+        <button class="icon-btn filter-btn" id="filterBtn" aria-label="Filter kategori" title="Filter kategori">
+          <span class="material-symbols-rounded">filter_list</span>
+        </button>
+        <div class="filter-dropdown" id="filterDropdown">
+          <div class="filter-dropdown-header">
+            <span class="material-symbols-rounded">filter_list</span>
+            <span>Filter Kategori</span>
+          </div>
+          <div class="filter-dropdown-list">
+            <label class="filter-option active" data-type="all">
+              <span class="material-symbols-rounded filter-check">check</span>
+              <span class="material-symbols-rounded filter-icon">apps</span>
+              <span class="filter-label">Semua Tipe</span>
+              <span class="filter-count">24.9k</span>
+            </label>
+            <label class="filter-option" data-type="Artikel">
+              <span class="material-symbols-rounded filter-check">check</span>
+              <span class="material-symbols-rounded filter-icon">article</span>
+              <span class="filter-label">Artikel</span>
+              <span class="filter-count">712</span>
+            </label>
+            <label class="filter-option" data-type="Monografi">
+              <span class="material-symbols-rounded filter-check">check</span>
+              <span class="material-symbols-rounded filter-icon">book</span>
+              <span class="filter-label">Monografi</span>
+              <span class="filter-count">26</span>
+            </label>
+            <label class="filter-option" data-type="Laporan Penelitian">
+              <span class="material-symbols-rounded filter-check">check</span>
+              <span class="material-symbols-rounded filter-icon">biotech</span>
+              <span class="filter-label">Laporan Penelitian</span>
+              <span class="filter-count">248</span>
+            </label>
+            <label class="filter-option" data-type="Konferensi">
+              <span class="material-symbols-rounded filter-check">check</span>
+              <span class="material-symbols-rounded filter-icon">groups</span>
+              <span class="filter-label">Konferensi</span>
+              <span class="filter-count">134</span>
+            </label>
+            <label class="filter-option" data-type="Skripsi">
+              <span class="material-symbols-rounded filter-check">check</span>
+              <span class="material-symbols-rounded filter-icon">menu_book</span>
+              <span class="filter-label">Skripsi</span>
+              <span class="filter-count">19.9k</span>
+            </label>
+            <label class="filter-option" data-type="Tesis">
+              <span class="material-symbols-rounded filter-check">check</span>
+              <span class="material-symbols-rounded filter-icon">workspace_premium</span>
+              <span class="filter-label">Tesis</span>
+              <span class="filter-count">1.5k</span>
+            </label>
+            <label class="filter-option" data-type="Disertasi">
+              <span class="material-symbols-rounded filter-check">check</span>
+              <span class="material-symbols-rounded filter-icon">verified</span>
+              <span class="filter-label">Disertasi</span>
+              <span class="filter-count">170</span>
+            </label>
+            <label class="filter-option" data-type="Lainnya">
+              <span class="material-symbols-rounded filter-check">check</span>
+              <span class="material-symbols-rounded filter-icon">more_horiz</span>
+              <span class="filter-label">Lainnya</span>
+              <span class="filter-count">2.3k</span>
+            </label>
+          </div>
+        </div>
+        <!-- SAMPAI SINI -->
+        
       </div>
 
       <div class="header-actions">
@@ -281,10 +350,11 @@
         </button>
       </div>
     </div>
+    
+    <!-- Toast & Overlay di dalam main -->
+    <div class="toast-container" id="toastContainer"></div>
+    <div class="filter-dropdown-overlay" id="filterDropdownOverlay"></div>
   </main>
-
-  <!-- Toast Container -->
-  <div class="toast-container" id="toastContainer"></div>
 
   <script src="./js/search.js"></script>
 </body>

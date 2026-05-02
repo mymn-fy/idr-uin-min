@@ -349,10 +349,17 @@ async function searchDocuments(db, query, limit = 20) {
     const searchQuery = `%${query}%`;
     const results = await asyncDb.all(
       `SELECT id, title, link, description, content, category, type, author, year, created_at 
-       FROM documents 
-       WHERE title LIKE ? OR content LIKE ? OR description LIKE ?
-       ORDER BY created_at DESC
-       LIMIT ?`,
+      FROM documents 
+      WHERE title LIKE ? OR content LIKE ? OR description LIKE ?
+      ORDER BY 
+        CASE 
+          WHEN type = 'Skripsi' THEN 1
+          WHEN type = 'Tesis' THEN 2
+          WHEN type = 'Disertasi' THEN 3
+          ELSE 4
+        END,
+        created_at DESC
+      LIMIT ?`,
       [searchQuery, searchQuery, searchQuery, limit]
     );
 
@@ -391,10 +398,13 @@ async function searchDocumentsWithFTS(db, query, typeFilter, page = 1, limit = 1
     const total = parseInt(countRes.rows[0].total);
 
     // 4. Tentukan Urutan (Sort)
-    let orderBy = 'ORDER BY created_at DESC'; // default newest
+    // Prioritaskan tipe dokumen tertentu
+    const typePriority = `(CASE WHEN type = 'Skripsi' THEN 1 WHEN type = 'Tesis' THEN 2 WHEN type = 'Disertasi' THEN 3 ELSE 4 END)`;
+
+    let orderBy = `ORDER BY ${typePriority}, created_at DESC`; // default newest
     if (sortBy === 'relevance' && query) {
       // Prioritaskan yang judulnya mirip di awal
-      orderBy = `ORDER BY (CASE WHEN title ILIKE $1 THEN 1 ELSE 2 END), created_at DESC`;
+      orderBy = `ORDER BY (CASE WHEN title ILIKE $1 THEN 1 ELSE 2 END), ${typePriority}, created_at DESC`;
     }
 
     // 5. Ambil Data dengan Limit & Offset
