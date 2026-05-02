@@ -267,54 +267,68 @@ async function insertDocuments(db, documents) {
 
   const total = documents.length;
   if (total > 0) {
-    console.log(`\n⏳ Mulai menyinkronkan ${total} data ke Supabase... (Ini mungkin memakan waktu belasan menit)`);
+    console.log(`\n⏳ Memproses ${total} data ke database...`);
   }
 
   try {
     for (let i = 0; i < total; i++) {
       const doc = documents[i];
       
-      // Tampilkan progress setiap 500 data agar tidak terlihat macet
+      // Progress log setiap 500 data
       if ((i + 1) % 500 === 0 || i + 1 === total) {
-        console.log(`   ➔ Progress: [${i + 1}/${total}] data telah diproses...`);
+        console.log(`   ➔ Progress: [${i + 1}/${total}] data diproses...`);
       }
 
       try {
-        // Validasi
         if (!doc.title || !doc.link) {
           results.errors++;
-          results.details.push({ link: doc.link, status: 'error', message: 'title atau link kosong' });
           continue;
         }
 
-        // Cek duplikat & Auto-Upgrade Type
-        const existingDoc = await asyncDb.get('SELECT id, type FROM documents WHERE link = ?', [doc.link]);
+        // 1. Cek apakah link sudah ada (Ambil juga kolom author dan year)
+        const existingDoc = await asyncDb.get('SELECT id, type, author, year FROM documents WHERE link = ?', [doc.link]);
+
         if (existingDoc) {
-          if (existingDoc.type === 'Lainnya' && doc.type && doc.type !== 'Lainnya') {
+          // 2. LOGIKA PATCH: Cek apakah data lama perlu dilengkapi
+          const isAuthorEmpty = !existingDoc.author || existingDoc.author === '' || existingDoc.author === 'Penulis Tidak Diketahui';
+          const isYearEmpty = !existingDoc.year || existingDoc.year === '';
+          const isTypeUpgrade = existingDoc.type === 'Lainnya' && doc.type && doc.type !== 'Lainnya';
+
+          if (isAuthorEmpty || isYearEmpty || isTypeUpgrade) {
+            // Lakukan UPDATE untuk melengkapi data yang kosong
             await asyncDb.run(
-              `UPDATE documents SET title = ?, description = ?, content = ?, type = ?, author = ?, year = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-              [doc.title, doc.description || '', doc.content || '', doc.type, doc.author || '', doc.year || '', existingDoc.id]
+              `UPDATE documents SET 
+               title = ?, 
+               author = ?, 
+               year = ?, 
+               type = ?, 
+               updated_at = CURRENT_TIMESTAMP 
+               WHERE id = ?`,
+              [
+                doc.title, 
+                doc.author || existingDoc.author, 
+                doc.year || existingDoc.year, 
+                (isTypeUpgrade ? doc.type : existingDoc.type), 
+                existingDoc.id
+              ]
             );
-            results.inserted++; // Hitung sebagai berhasil terproses
+            results.inserted++; // Dihitung sebagai data yang berhasil diperbarui
           } else {
             results.duplicates++;
-            results.details.push({ link: doc.link, status: 'duplicate' });
           }
           continue;
         }
 
-        // Insert
+        // 3. Jika benar-benar data baru, lakukan INSERT
         const result = await asyncDb.run(
-          `INSERT INTO documents (title, link, description, content, category, type, author, year) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
-          [doc.title, doc.link, doc.description || '', doc.content || '', doc.category || null, doc.type || 'Lainnya', doc.author || '', doc.year || '']
+          `INSERT INTO documents (title, link, description, content, type, author, year) 
+           VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id`,
+          [doc.title, doc.link, doc.description || '', '', doc.type || 'Lainnya', doc.author || '', doc.year || '']
         );
 
         results.inserted++;
-        results.details.push({ link: doc.link, status: 'inserted', id: result.id });
       } catch (error) {
         results.errors++;
-        results.details.push({ link: doc.link, status: 'error', message: error.message });
       }
     }
   } catch (error) {
@@ -323,7 +337,6 @@ async function insertDocuments(db, documents) {
 
   return results;
 }
-
 // Search documents
 async function searchDocuments(db, query, limit = 20) {
   const asyncDb = promisifyDb(db);

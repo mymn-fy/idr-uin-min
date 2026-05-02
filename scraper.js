@@ -11,19 +11,11 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
  */
 async function scrapePage(url) {
   try {
-    // Validasi URL
-    if (!url || typeof url !== 'string') {
-      throw new Error('URL harus berupa string yang valid');
-    }
+    // 1. Validasi URL
+    if (!url || typeof url !== 'string') throw new Error('URL harus berupa string');
+    try { new URL(url); } catch (e) { throw new Error(`URL tidak valid: ${url}`); }
 
-    // Validasi format URL
-    try {
-      new URL(url);
-    } catch (error) {
-      throw new Error(`URL tidak valid: ${url}`);
-    }
-
-    // Ambil halaman dengan timeout 10 detik
+    // 2. Ambil halaman
     const response = await axios.get(url, {
       timeout: 10000,
       headers: {
@@ -31,150 +23,85 @@ async function scrapePage(url) {
       }
     });
 
-    // Load HTML dengan cheerio
     const $ = cheerio.load(response.data);
     const results = [];
 
-    // [SUPER SCRAPER] Ekstrak Meta Tag EPrints (Membaca tipe data dari dalam dokumen)
+    // 3. Logika [SUPER SCRAPER] - Untuk halaman detail (Meta Tags)
     const eprintsType = $('meta[name="eprints.type"]').attr('content') || $('meta[name="DC.type"]').attr('content');
     
     if (eprintsType) {
       const docTitle = $('meta[name="eprints.title"]').attr('content') || $('meta[name="DC.title"]').attr('content') || $('h1').text().trim();
       const docAbstract = $('meta[name="eprints.abstract"]').attr('content') || $('meta[name="DC.description"]').attr('content') || '';
-      const thesisType = $('meta[name="eprints.thesis_type"]').attr('content') || '';
       const docAuthor = $('meta[name="eprints.creators_name"]').attr('content') || $('meta[name="DC.creator"]').attr('content') || '';
       const docDate = $('meta[name="eprints.date"]').attr('content') || $('meta[name="DC.date"]').attr('content') || '';
       const docYear = docDate ? docDate.substring(0, 4) : '';
       
-      let docType = 'Lainnya';
-      const typeLower = (eprintsType + ' ' + thesisType).toLowerCase();
-      
-      if (typeLower.includes('skripsi')) docType = 'Skripsi';
-      else if (typeLower.includes('disertasi')) docType = 'Disertasi';
-      else if (typeLower.includes('thesis') || typeLower.includes('tesis')) docType = 'Tesis';
-      else if (typeLower.includes('article')) docType = 'Artikel';
-      else if (typeLower.includes('monograph')) docType = 'Monografi';
-      else if (typeLower.includes('conference')) docType = 'Konferensi';
-      else if (typeLower.includes('book')) docType = 'Buku';
-      else if (typeLower.includes('laporan')) docType = 'Laporan Penelitian';
-
-      if (docTitle) {
-        results.push({
-          title: docTitle.slice(0, 100),
-          link: url, // Daftarkan halaman detail ini sendiri sebagai dokumen utama
-          description: docAbstract.slice(0, 150) + (docAbstract.length > 150 ? '...' : ''),
-          type: docType,
-          author: docAuthor,
-          year: docYear
-        });
-      }
+      results.push({
+        title: docTitle,
+        link: url,
+        description: docAbstract.slice(0, 200),
+        type: 'Lainnya', // Akan diupdate otomatis oleh database.js berdasarkan link
+        author: docAuthor,
+        year: docYear
+      });
     }
 
-    // Menentukan default type berdasarkan URL halaman yang sedang di-scrape
-    let defaultType = 'Lainnya';
-    const urlLower = url.toLowerCase();
-    if (urlLower.includes('thesis')) defaultType = 'Tesis';
-    else if (urlLower.includes('skripsi')) defaultType = 'Skripsi';
-    else if (urlLower.includes('article')) defaultType = 'Artikel';
-    else if (urlLower.includes('monograph')) defaultType = 'Monografi';
-    else if (urlLower.includes('laporan_penelitian') || urlLower.includes('laporan=5fpenelitian')) defaultType = 'Laporan Penelitian';
-    else if (urlLower.includes('conference_item') || urlLower.includes('conference=5fitem')) defaultType = 'Konferensi';
-    else if (urlLower.includes('disertasi')) defaultType = 'Disertasi';
+    // 4. Logika [LIST SCRAPER] - Untuk halaman daftar (Kategori)
+    // Ini adalah bagian paling penting untuk mengambil data masal (Author & Year)
+    const listItems = $('.ep_view_content p');
+    
+    if (listItems.length > 0) {
+      listItems.each((index, element) => {
+        const $element = $(element);
+        const $link = $element.find('a').first();
+        
+        let title = $link.text().trim();
+        let link = $link.attr('href');
+        let fullText = $element.text().trim();
 
-    // Strategi scraping: cari link dari berbagai selector umum
-    const selectors = [
-      'a[href]', // Semua link
-    ];
+        if (title && link) {
+          // Convert relative URL ke absolute
+          if (!link.startsWith('http')) {
+            link = new URL(link, url).href;
+          }
 
-    // Ekstrak data dari setiap link
-    $(selectors.join(', ')).each((index, element) => {
-      const $element = $(element);
-      
-      // Ambil title dan link
-      let title = $element.text().trim();
-      let link = $element.attr('href');
+          // Ekstrak Author & Year dari teks: "Nama Penulis (Tahun) Judul Dokumen"
+          let author = '';
+          let year = '';
 
-      // Skip jika title atau link kosong
-      if (!title || !link || link === '#') {
-        return;
-      }
+          if (fullText.includes('(')) {
+            // Author adalah teks sebelum kurung buka pertama
+            author = fullText.split('(')[0].trim();
+            
+            // Year adalah 4 digit di dalam kurung
+            const yearMatch = fullText.match(/\((\d{4})\)/);
+            year = yearMatch ? yearMatch[1] : '';
+          }
 
-      // Skip link eksternal atau anchor
-      if (link.startsWith('http') || link.startsWith('javascript:') || link.startsWith('tel:') || link.startsWith('mailto:')) {
-        if (!link.includes('uin-antasari.ac.id')) {
-          return;
+          // Tambahkan ke hasil
+          results.push({
+            title: title,
+            link: link,
+            description: fullText.slice(0, 200),
+            type: 'Lainnya', // Biarkan database.js yang menentukan tipenya
+            author: author || 'Penulis Tidak Diketahui',
+            year: year
+          });
         }
-      }
+      });
+    }
 
-      // Convert relative URL ke absolute
-      if (!link.startsWith('http')) {
-        const baseUrl = new URL(url);
-        link = new URL(link, baseUrl).href;
-      }
-
-      // Ambil deskripsi dari parent element atau aria-label
-      let description = $element.attr('title') || $element.attr('aria-label') || '';
-      
-      // Jika tidak ada, coba ambil dari parent paragraf atau div sebelahnya
-      if (!description) {
-        const $parent = $element.parent();
-        description = $parent.find('p, .description, .excerpt').text().trim().slice(0, 150);
-      }
-
-      // Limit deskripsi hingga 150 karakter
-      if (description.length > 150) {
-        description = description.slice(0, 150) + '...';
-      }
-
-      // Limit title hingga 100 karakter
-      if (title.length > 100) {
-        title = title.slice(0, 100) + '...';
-      }
-
-      // Menentukan type berdasarkan link
-      let type = defaultType;
-      const linkLower = link.toLowerCase();
-      if (linkLower.includes('thesis')) type = 'Tesis';
-      else if (linkLower.includes('skripsi')) type = 'Skripsi';
-      else if (linkLower.includes('article')) type = 'Artikel';
-      else if (linkLower.includes('monograph')) type = 'Monografi';
-      else if (linkLower.includes('laporan_penelitian') || linkLower.includes('laporan=5fpenelitian')) type = 'Laporan Penelitian';
-      else if (linkLower.includes('conference_item') || linkLower.includes('conference=5fitem')) type = 'Konferensi';
-      else if (linkLower.includes('disertasi')) type = 'Disertasi';
-
-      // Tambah ke results jika belum ada duplikat
-      const isDuplicate = results.some(
-        (item) => item.link === link && item.title === title
-      );
-
-      if (!isDuplicate) {
-        results.push({
-          title,
-          link,
-          description,
-        type,
-        author: '',
-        year: ''
-        });
-      }
-    });
-
-    // Filter hasil yang relevan (dengan title yang berarti)
+    // 5. Filter hasil agar hanya link dari uin-antasari
     const filtered = results.filter((item) => {
-      return item.title.length > 2 && !item.title.match(/^[\W_]+$/);
+      return item.link.includes('uin-antasari.ac.id') && item.title.length > 2;
     });
 
     console.log(`✓ Berhasil scrape ${url} - ${filtered.length} items ditemukan`);
     return filtered;
+
   } catch (error) {
     console.error(`✗ Error scraping ${url}:`, error.message);
-    
-    // Return error object
-    return {
-      error: true,
-      message: error.message,
-      url: url
-    };
+    return { error: true, message: error.message, url: url };
   }
 }
 

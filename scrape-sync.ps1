@@ -3,35 +3,40 @@
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "Starting scraping to Supabase..." -ForegroundColor Cyan
+Write-Host "--- Memulai proses Sinkronisasi ke Supabase ---" -ForegroundColor Cyan
 
-# Check if server is running
-Write-Host "Checking server on localhost:3000..." -ForegroundColor Yellow
+# 1. Cek apakah server sedang berjalan
+Write-Host "[1/3] Mengecek server di localhost:3000..." -ForegroundColor Yellow
 try {
     $test = Invoke-RestMethod -Uri "http://localhost:3000/api/statistics" -ErrorAction Stop
-    Write-Host "Server is running!" -ForegroundColor Green
+    Write-Host "Server aktif dan merespon!" -ForegroundColor Green
 } catch {
-    Write-Host "Server not running. Please start it first." -ForegroundColor Red
+    Write-Host "ERROR: Server tidak berjalan. Silakan jalankan 'node server.js' terlebih dahulu." -ForegroundColor Red
     exit 1
 }
 
-# Prepare request
+# 2. Persiapkan data request
+# Daftar URL yang akan di-scrape
+$targetUrls = @(
+    "https://idr.uin-antasari.ac.id/view/doctype/thesis.html",
+    "https://idr.uin-antasari.ac.id/view/doctype/skripsi.html",
+    "https://idr.uin-antasari.ac.id/view/doctype/article.html",
+    "https://idr.uin-antasari.ac.id/view/doctype/monograph.html",
+    "https://idr.uin-antasari.ac.id/view/doctype/laporan=5Fpenelitian.html",
+    "https://idr.uin-antasari.ac.id/view/doctype/conference=5Fitem.html",
+    "https://idr.uin-antasari.ac.id/view/doctype/disertasi.html",
+    "https://idr.uin-antasari.ac.id/view/doctype/book.html",
+    "https://idr.uin-antasari.ac.id/view/doctype/other.html"
+)
+
 $body = @{
-    urls = @(
-        "https://idr.uin-antasari.ac.id/view/doctype/thesis.html",
-        "https://idr.uin-antasari.ac.id/view/doctype/skripsi.html",
-        "https://idr.uin-antasari.ac.id/view/doctype/article.html",
-        "https://idr.uin-antasari.ac.id/view/doctype/monograph.html",
-        "https://idr.uin-antasari.ac.id/view/doctype/laporan=5Fpenelitian.html",
-        "https://idr.uin-antasari.ac.id/view/doctype/conference=5Fitem.html",
-        "https://idr.uin-antasari.ac.id/view/doctype/disertasi.html",
-        "https://idr.uin-antasari.ac.id/view/doctype/book.html",
-        "https://idr.uin-antasari.ac.id/view/doctype/other.html"
-    )
+    urls = $targetUrls
     delay = 1000
 } | ConvertTo-Json -Depth 3
 
-Write-Host "Sending scraping request..." -ForegroundColor Yellow
+# 3. Kirim permintaan scraping
+Write-Host "[2/3] Mengirim permintaan scraping (ini memakan waktu lama)..." -ForegroundColor Yellow
+Write-Host "Jangan tutup jendela ini sampai selesai." -ForegroundColor White
 
 try {
     $response = Invoke-RestMethod `
@@ -39,20 +44,21 @@ try {
         -Method Post `
         -Headers @{"Content-Type"="application/json"} `
         -Body $body `
-        -TimeoutSec 300
+        -TimeoutSec 3600
     
-    Write-Host "Success!" -ForegroundColor Green
-    Write-Host "Items found: $($response.itemsFound)" -ForegroundColor White
-    Write-Host "Inserted: $($response.database.inserted)" -ForegroundColor Green
-    Write-Host "Duplicates: $($response.database.duplicates)" -ForegroundColor Yellow
-    Write-Host "Errors: $($response.database.errors)" -ForegroundColor Red
+    Write-Host "[3/3] Selesai!" -ForegroundColor Green
+    Write-Host "---------------------------------------" -ForegroundColor White
+    Write-Host "Data ditemukan : $($response.itemsFound)" -ForegroundColor White
+    Write-Host "Data Berhasil  : $($response.database.inserted)" -ForegroundColor Green
+    Write-Host "Data Duplikat  : $($response.database.duplicates)" -ForegroundColor Yellow
+    Write-Host "Data Error     : $($response.database.errors)" -ForegroundColor Red
     
-    # Get updated statistics
+    # Ambil statistik terbaru
     $stats = Invoke-RestMethod -Uri "http://localhost:3000/api/statistics"
-    Write-Host "Total in database: $($stats.total)" -ForegroundColor Green
-    Write-Host "Data synced to Supabase and Vercel!" -ForegroundColor Cyan
+    Write-Host "Total data di database sekarang: $($stats.total)" -ForegroundColor Cyan
+    Write-Host "---------------------------------------" -ForegroundColor White
     
 } catch {
-    Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Terjadi kesalahan saat proses scraping: $($_.Exception.Message)" -ForegroundColor Red
     exit 1
 }

@@ -481,7 +481,7 @@ function renderResults() {
 
     const metaItems = [];
     if (result.author) {
-      metaItems.push(`<span class="result-meta-item"><span class="material-symbols-rounded">person</span> ${escapeHtml(result.author)}</span>`);
+      metaItems.push(`<span class="result-meta-item"><span class="material-symbols-rounded">person</span> ${escapeHtml(toTitleCase(result.author))}</span>`);
     }
     if (result.year) {
       metaItems.push(`<span class="result-meta-item"><span class="material-symbols-rounded">calendar_today</span> ${escapeHtml(result.year)}</span>`);

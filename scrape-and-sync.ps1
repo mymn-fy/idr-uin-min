@@ -14,7 +14,8 @@ Write-Host "⏳ Checking if server is running on localhost:3000..." -ForegroundC
 try {
     $test = Invoke-RestMethod -Uri "http://localhost:3000/api/statistics" -ErrorAction Stop
     Write-Host "✓ Server is running!" -ForegroundColor Green
-} catch {
+}
+catch {
     Write-Host "❌ Server is not running. Please start it first:" -ForegroundColor Red
     Write-Host "   npm start" -ForegroundColor Yellow
     exit 1
@@ -22,7 +23,7 @@ try {
 
 # Prepare request body
 $body = @{
-    urls = @(
+    urls  = @(
         "https://idr.uin-antasari.ac.id/view/doctype/thesis.html",
         "https://idr.uin-antasari.ac.id/view/doctype/skripsi.html",
         "https://idr.uin-antasari.ac.id/view/doctype/article.html",
@@ -51,7 +52,7 @@ try {
     $response = Invoke-RestMethod `
         -Uri "http://localhost:3000/api/scrape-multiple" `
         -Method Post `
-        -Headers @{"Content-Type"="application/json"} `
+        -Headers @{"Content-Type" = "application/json" } `
         -Body $body `
         -TimeoutSec 300
     
@@ -92,7 +93,8 @@ try {
    Will now have access to all $($stats.total) documents!
 " -ForegroundColor Green
     
-} catch {
+}
+catch {
     Write-Host "❌ Error during scraping:" -ForegroundColor Red
     Write-Host $_.Exception.Message -ForegroundColor Red
     exit 1
