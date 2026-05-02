@@ -10,10 +10,11 @@ Write-Host "======================================`n" -ForegroundColor Cyan
 # Check server
 Write-Host "Checking server on localhost:3000..." -ForegroundColor Yellow
 try {
-    $test = Invoke-RestMethod -Uri "http://localhost:3000/api/statistics" -ErrorAction Stop
+    $null = Invoke-RestMethod -Uri "http://localhost:3000/api/statistics" -ErrorAction Stop -TimeoutSec 5
     Write-Host "[OK] Server is running!`n" -ForegroundColor Green
-} catch {
-    Write-Host "[ERROR] Server not running. Start with: npm start" -ForegroundColor Red
+}
+catch {
+    Write-Host "[ERROR] Server not running. Start with: npm start`nDetail: $($_.Exception.Message)" -ForegroundColor Red
     exit 1
 }
 
@@ -37,12 +38,14 @@ try {
         Write-Host "Database Status:" -ForegroundColor Cyan
         Write-Host "  - Total docs: $($stats.total)" -ForegroundColor Green
         Write-Host "  - Unique links: $($stats.unique_links)" -ForegroundColor Green
-    } catch {
+    }
+    catch {
         Write-Host "  [Warning] Could not fetch statistics" -ForegroundColor Yellow
     }
     
     Write-Host "`n[OK] Data updated in Supabase and Vercel!`n" -ForegroundColor Green
-} catch {
+}
+catch {
     Write-Host "`n[ERROR] Exception: $($_.Exception.Message)`n" -ForegroundColor Red
     exit 1
 }

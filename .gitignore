@@ -4,6 +4,7 @@ database/*.db
 .env
 *.log
 scraped_data_*.json
+script/
 
 # Deprecated/Unused Scripts
 cleanup-wrong-data.js
