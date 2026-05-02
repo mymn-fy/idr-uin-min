@@ -1316,6 +1316,10 @@ body {
     display: flex !important;
   }
 
+  .sidebar-controls {
+    display: none !important;
+  }
+
   .top-header {
     padding: 12px 16px;
     backdrop-filter: none; /* Mencegah filter dropdown (fixed) terperangkap di header */
