@@ -1073,7 +1073,7 @@ body {
    ======================================== */
 .arabic-text {
   font-family:
-    "Traditional Arabic", "Geeza Pro", "Noto Naskh Arabic",
+    "Aref Ruqaa", "Traditional Arabic", "Geeza Pro", "Noto Naskh Arabic",
     "Droid Arabic Naskh", "Amiri", serif;
   font-size: 1.4em; /* Ukuran dibesarkan sedikit karena font Arab bawaan biasanya kecil */
   line-height: 1.6;
