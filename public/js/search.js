@@ -31,21 +31,163 @@ const statLatest = document.getElementById('statLatest');
 const statStatus = document.getElementById('statStatus');
 
 // ========================================
+// Modal Management
+// ========================================
+const documentModal = document.createElement('div');
+documentModal.className = 'document-modal';
+documentModal.innerHTML = `
+  <div class="document-modal-overlay"></div>
+  <div class="document-modal-container">
+    <div class="modal-top-bar">
+      <div class="modal-badge-container"></div>
+      <button class="document-modal-close" aria-label="Tutup"><span class="material-symbols-rounded">close</span></button>
+    </div>
+    <div class="document-modal-body"></div>
+    <div class="modal-sticky-footer">
+      <a href="#" target="_blank" rel="noopener noreferrer" class="modal-action-btn">
+        <span class="material-symbols-rounded">open_in_new</span> Buka Dokumen Asli
+      </a>
+    </div>
+  </div>
+`;
+document.body.appendChild(documentModal);
+
+const modalOverlay = documentModal.querySelector('.document-modal-overlay');
+const modalCloseBtn = documentModal.querySelector('.document-modal-close');
+const modalBody = documentModal.querySelector('.document-modal-body');
+const modalBadgeContainer = documentModal.querySelector('.modal-badge-container');
+const modalActionBtn = documentModal.querySelector('.modal-action-btn');
+const modalContainer = documentModal.querySelector('.document-modal-container');
+
+function closeDocumentModal() {
+  documentModal.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+modalOverlay.addEventListener('click', closeDocumentModal);
+modalCloseBtn.addEventListener('click', closeDocumentModal);
+
+function showDocumentModal(result) {
+  const typeKey = getTypeKey(result.type);
+  const badgeClass = `result-badge--${typeKey}`;
+  const typeColor = getTypeColor(result.type);
+  
+  modalContainer.style.setProperty('--type-color', typeColor);
+  modalBadgeContainer.innerHTML = result.type ? `<span class="result-badge ${badgeClass}">${escapeHtml(result.type)}</span>` : '';
+  modalActionBtn.href = escapeHtml(result.link);
+  
+  const cleanTitle = fixTypos(result.title);
+
+  let arabicTitle = '';
+  let latinTitle = cleanTitle;
+
+  if (cleanTitle.includes('=')) {
+    const parts = cleanTitle.split('=').map(p => p.trim()).filter(p => p.length > 0);
+    const arabicParts = parts.filter(p => getTextDirection(p) === 'rtl');
+    const latinParts = parts.filter(p => getTextDirection(p) === 'ltr');
+    
+    arabicTitle = arabicParts.join(' = ');
+    latinTitle = latinParts.join(' = ');
+  } else {
+    if (getTextDirection(cleanTitle) === 'rtl') {
+      arabicTitle = cleanTitle;
+      latinTitle = '';
+    } else {
+      arabicTitle = '';
+      latinTitle = cleanTitle;
+    }
+  }
+
+  const metaItems = [];
+  if (result.author) {
+    metaItems.push(`
+        <div class="modal-chip">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>${escapeHtml(formatAuthorNames(result.author))}</span>
+        </div>
+      `);
+  }
+  if (result.year) {
+    metaItems.push(`
+      <div class="modal-chip">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>${escapeHtml(result.year)}</span>
+      </div>
+    `);
+  }
+  const metaHtml = metaItems.length ? `<div class="modal-meta-chips">${metaItems.join('')}</div>` : '';
+
+  let arabicHtml = '';
+  if (arabicTitle) {
+    arabicHtml = `
+          <div class="modal-arabic-wrapper">
+            <span class="ar-badge">AR</span>
+            <div class="modal-arabic-title" dir="rtl">${wrapArabic(escapeHtml(toTitleCase(arabicTitle)))}</div>
+          </div>
+        `;
+  }
+  
+  let latinHtml = '';
+  if (latinTitle) {
+    latinHtml = `
+      <div class="modal-latin-title">${escapeHtml(toTitleCase(latinTitle))}</div>
+    `;
+  }
+
+  let separatorHtml = (arabicHtml && latinHtml) ? `<div class="modal-title-separator"></div>` : '';
+
+  modalBody.innerHTML = `
+    <div class="modal-label">JUDUL</div>
+    ${arabicHtml}
+    ${separatorHtml}
+    ${latinHtml}
+    ${metaHtml}
+  `;
+
+  documentModal.classList.add('active');
+  document.body.style.overflow = 'hidden'; // Kunci scroll di halaman utama
+}
+
+// ========================================
 // State Management
 // ========================================
 const state = {
   query: '',
   page: 1,
-  sortBy: 'newest',
-  selectedType: 'Skripsi',
-  results: [],
+  totalPages: 1,
   total: 0,
-  totalPages: 0,
+  results: [],
   isLoading: false,
-  error: null
+  error: null,
+  sortBy: 'newest',
+  selectedType: 'all'
 };
 
 let debounceTimer;
+
+// ========================================
+// Theme & Font Management
+function initFontMode() {
+  const savedFont = localStorage.getItem('arabicFont') || 'amiri';
+  if (savedFont === 'aref') {
+    document.body.classList.add('font-aref');
+  } else {
+    document.body.classList.remove('font-aref');
+  }
+}
+
+function toggleFontMode() {
+  const isAref = document.body.classList.contains('font-aref');
+  if (isAref) {
+    document.body.classList.remove('font-aref');
+    localStorage.setItem('arabicFont', 'amiri');
+    showToast('Font Arab diubah ke Amiri', 'info');
+  } else {
+    document.body.classList.add('font-aref');
+    localStorage.setItem('arabicFont', 'aref');
+    showToast('Font Arab diubah ke Aref Ruqaa', 'info');
+  }
+}
 
 // ========================================
 // Theme Management
@@ -479,11 +621,8 @@ function renderResults() {
   }
 
   state.results.forEach((result) => {
-    const card = document.createElement('a');
+    const card = document.createElement('div');
     card.className = 'result-card';
-    card.href = result.link;
-    card.target = '_blank';
-    card.rel = 'noopener noreferrer';
     card.dataset.link = result.link;
 
     const typeKey = getTypeKey(result.type);
@@ -521,11 +660,19 @@ function renderResults() {
         <h3 class="result-title">${formatTitle(cleanTitle)}</h3>
         ${result.type ? `<span class="result-badge ${badgeClass}">${escapeHtml(result.type)}</span>` : ''}
       </div>
-      <div class="result-url">${escapeHtml(result.link)}</div>
+      <a href="${escapeHtml(result.link)}" target="_blank" rel="noopener noreferrer" class="result-url">${escapeHtml(result.link)}</a>
       ${metaHtml}
       ${descHtml}
       ${contentHtml}
     `;
+
+    // Tambahkan event listener untuk memunculkan modal jika kartu diklik
+    card.addEventListener('click', (e) => {
+      // Tapi jangan munculkan modal jika user mengklik bagian link (URL) langsung
+      if (!e.target.closest('.result-url')) {
+        showDocumentModal(result);
+      }
+    });
 
     resultsDiv.appendChild(card);
   });
@@ -728,6 +875,11 @@ function wrapArabic(text) {
 function fixTypos(text) {
   if (!text) return '';
   
+  // 1. Normalisasi Unicode (NFKC)
+  // Mengubah karakter "Arabic Presentation Forms" (biasanya akibat copy-paste dari PDF)
+  // kembali menjadi huruf Arab standar, sehingga font Aref Ruqaa bisa merendernya secara utuh.
+  let fixedText = text.normalize('NFKC');
+
   // Kamus perbaikan teks bawaan dari sumber aslinya yang salah ketik/terbalik
   const corrections = [
     // Memperbaiki teks "Al-Qira'ah Al-Rasyidah" yang terbalik harfiah (termasuk spasi invisible)
@@ -738,7 +890,6 @@ function fixTypos(text) {
     { error: /\(([^()]+?)\s*\((دراسة\s*داللية|دراسةداللية)\./g, fix: '$1 (دراسة داللية)' }
   ];
   
-  let fixedText = text;
   corrections.forEach(c => {
     fixedText = fixedText.replace(c.error, c.fix);
   });
@@ -833,6 +984,20 @@ function toTitleCase(str) {
     .join(' ');
 }
 
+function initFontToggleBtn() {
+  if (document.getElementById('fontToggleBtn')) return; // Cegah tombol ganda
+  const fontToggleBtn = document.createElement('button');
+  fontToggleBtn.id = 'fontToggleBtn';
+  fontToggleBtn.className = 'icon-btn desktop-only'; 
+  fontToggleBtn.title = 'Ganti Font Arab (Amiri / Aref Ruqaa)';
+  fontToggleBtn.innerHTML = '<span class="material-symbols-rounded">text_format</span>';
+  fontToggleBtn.addEventListener('click', toggleFontMode);
+  
+  if (themeToggle && themeToggle.parentNode) {
+    themeToggle.parentNode.insertBefore(fontToggleBtn, themeToggle);
+  }
+}
+
 // ========================================
 // Category Counts
 // ========================================
@@ -888,6 +1053,8 @@ window.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initSidebarMode();
   initSortDisplay();
+  initFontMode();
+  initFontToggleBtn();
   handleMobileDropdown();
   loadStatistics();
   if (window.innerWidth > 768) {
@@ -922,7 +1089,7 @@ function toggleFilterDropdown(e) {
   if (filterDropdownOverlay) {
     filterDropdownOverlay.classList.toggle('active', !isOpen);
   }
-  
+
   if (window.innerWidth <= 768) {
     document.body.style.overflow = !isOpen ? 'hidden' : '';
   }
