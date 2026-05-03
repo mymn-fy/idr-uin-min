@@ -45,7 +45,7 @@ app.get('/search', async (req, res) => {
     const type = req.query.type || req.query.category || 'all'; 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const sort = req.query.sort || 'relevance'; // Ambil parameter sort, default 'relevance'
+    const sort = req.query.sort || 'newest'; // Ambil parameter sort, default 'newest'
     
     // 2. Validasi pagination
     if (page < 1 || limit < 1) {

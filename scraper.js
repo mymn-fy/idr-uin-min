@@ -57,7 +57,10 @@ async function scrapePage(url) {
         
         let title = $link.text().trim();
         let link = $link.attr('href');
-        let fullText = $element.text().trim();
+        
+        // Sisipkan spasi setelah span untuk mencegah teks saling menempel (fused text)
+        $element.find('span').after(' ');
+        let fullText = $element.text().replace(/\s+/g, ' ').trim();
 
         if (title && link) {
           // Convert relative URL ke absolute

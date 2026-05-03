@@ -36,7 +36,7 @@ const statStatus = document.getElementById('statStatus');
 const state = {
   query: '',
   page: 1,
-  sortBy: 'relevance',
+  sortBy: 'newest',
   selectedType: 'Skripsi',
   results: [],
   total: 0,
@@ -190,7 +190,6 @@ async function loadStatistics() {
 
     if (typeof data.total === 'number') {
       statTotal.textContent = formatNumber(data.total);
-      document.getElementById('badge-all').textContent = formatNumber(data.total);
     }
 
     if (data.latest_added) {
@@ -480,8 +479,11 @@ function renderResults() {
   }
 
   state.results.forEach((result) => {
-    const card = document.createElement('div');
+    const card = document.createElement('a');
     card.className = 'result-card';
+    card.href = result.link;
+    card.target = '_blank';
+    card.rel = 'noopener noreferrer';
     card.dataset.link = result.link;
 
     const typeKey = getTypeKey(result.type);
@@ -490,7 +492,7 @@ function renderResults() {
 
     const metaItems = [];
     if (result.author) {
-      metaItems.push(`<span class="result-meta-item"><span class="material-symbols-rounded">person</span> ${escapeHtml(toTitleCase(result.author))}</span>`);
+      metaItems.push(`<span class="result-meta-item"><span class="material-symbols-rounded">person</span> ${escapeHtml(formatAuthorNames(result.author))}</span>`);
     }
     if (result.year) {
       metaItems.push(`<span class="result-meta-item"><span class="material-symbols-rounded">calendar_today</span> ${escapeHtml(result.year)}</span>`);
@@ -498,17 +500,17 @@ function renderResults() {
     const metaHtml = metaItems.length ? `<div class="result-meta">${metaItems.join('')}</div>` : '';
 
     const descHtml = result.description 
-      ? `<div class="result-description">${highlightQuery(result.description, state.query)}</div>` 
+      ? `<div class="result-description">${wrapArabic(highlightQuery(result.description, state.query))}</div>` 
       : '';
     const contentHtml = result.content 
-      ? `<div class="result-content">${highlightQuery(result.content, state.query)}</div>` 
+      ? `<div class="result-content">${wrapArabic(highlightQuery(result.content, state.query))}</div>` 
       : '';
 
     card.style.setProperty('--type-color', typeColor);
 
     card.innerHTML = `
       <div class="result-header">
-        <h3 class="result-title">${escapeHtml(toTitleCase(result.title))}</h3>
+        <h3 class="result-title">${wrapArabic(escapeHtml(toTitleCase(result.title)))}</h3>
         ${result.type ? `<span class="result-badge ${badgeClass}">${escapeHtml(result.type)}</span>` : ''}
       </div>
       <div class="result-url">${escapeHtml(result.link)}</div>
@@ -516,10 +518,6 @@ function renderResults() {
       ${descHtml}
       ${contentHtml}
     `;
-
-    card.addEventListener('click', () => {
-      window.open(result.link, '_blank');
-    });
 
     resultsDiv.appendChild(card);
   });
@@ -590,6 +588,8 @@ function getTypeKey(type) {
   const map = {
     'Artikel': 'artikel',
     'Monografi': 'monografi',
+    'Buku': 'buku',
+    'Book': 'buku',
     'Laporan Penelitian': 'laporan',
     'Konferensi': 'konferensi',
     'Skripsi': 'skripsi',
@@ -603,6 +603,8 @@ function getTypeColor(type) {
   const map = {
     'Artikel': '#10b981',
     'Monografi': '#f59e0b',
+    'Buku': '#8b5cf6',
+    'Book': '#8b5cf6',
     'Laporan Penelitian': '#3b82f6',
     'Konferensi': '#8b5cf6',
     'Skripsi': '#06b6d4',
@@ -621,6 +623,14 @@ function highlightQuery(content, query) {
   return escapeHtml(content).replace(regex, '<mark>$1</mark>');
 }
 
+function wrapArabic(text) {
+  if (!text) return '';
+  // Regex menangkap huruf Arab dan spasi di antaranya 
+  // Tidak menangkap tag HTML sehingga aman digabungkan dengan highlight
+  const arabicRegex = /([\u0600-\u06FF\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+(?:[\s]+[\u0600-\u06FF\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)*)/g;
+  return text.replace(arabicRegex, '<span class="arabic-text" dir="rtl">$1</span>');
+}
+
 function escapeHtml(text) {
   if (!text) return '';
   const map = {
@@ -633,19 +643,56 @@ function escapeHtml(text) {
   return text.replace(/[&<>"']/g, char => map[char]);
 }
 
+function formatAuthorNames(authorStr) {
+  if (!authorStr) return '';
+  
+  // 1. Perbaiki nama yang tergabung/fused akibat bug spasi HTML scraper lawas
+  // Contoh: "MasdariWardani" dipisahkan menjadi "Masdari; Wardani"
+  let fixedStr = authorStr.replace(/([a-z])([A-Z])/g, '$1; $2');
+  
+  // 2. Pisahkan berdasarkan pemisah yang umum (titik koma, kata "and", atau "&")
+  let authors = fixedStr.split(/\s*;\s*|\s+and\s+|\s*&\s*/i);
+  
+  let formattedAuthors = authors.map(author => {
+    author = author.trim();
+    // 3. Jika formatnya "Nama Belakang, Nama Depan", kita balik posisinya
+    if (author.includes(',')) {
+      let parts = author.split(',');
+      if (parts.length >= 2) {
+        const lastName = parts[0].trim();
+        const firstName = parts.slice(1).join(',').trim();
+        if (!firstName) return toTitleCase(lastName);
+        return `${toTitleCase(firstName)} ${toTitleCase(lastName)}`.trim();
+      }
+    }
+    return toTitleCase(author);
+  });
+  
+  return formattedAuthors.filter(a => a).join(', ');
+}
+
 function toTitleCase(str) {
   if (!str) return '';
 
   // 1. Daftar singkatan yang harus tetap HURUF BESAR (Acronyms)
   const acronyms = [
     'UPT', 'UIN', 'IAIN', 'IDR', 'PTIPD', 'LPM', 'LP2M', 'NIDN', 'NIP', 
-    'ST', 'SI', 'TI', 'KKN', 'PPL', 'SK', 'UU', 'KUA', 'DIY', 'KTP'
+    'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 
+    'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX',
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
+    'ST', 'SI', 'TI', 'KKN', 'PPL', 'SK', 'UU', 'KUA', 'DIY', 'KTP',
+    'SD', 'SMP', 'SMA', 'SMK', 'SMAK', 'TK', 'PAUD', 'MI', 'MTS', 'MTSN', 'MA', 'SDN', 'SMPN', 'SMAN', 'SMKN', 'MAN', 'MIN',
+    'ITB', 'UGM', 'UI', 'UNAIR', 'UNPADM', 'UNSYIAH', 'UNDIP', 'IPB',
+    'PhD', 'M.A.', 'M.SI', 'M.ENG', 'DR', 'PROF', 'ASSOC',
+    'ISSN', 'ISBN', 'DOI', 'URL', 'API', 'PHP', 'HTML', 'CSS', 'SQL',
+    'PDF', 'JPG', 'PNG', 'MP4', 'MOV', 'ZIP', 'RAR', 'XML', 'JSON'
   ];
 
   // 2. Daftar kata hubung yang harus tetap huruf kecil (kecuali di awal kalimat)
   const minorWords = [
     'di', 'ke', 'dari', 'pada', 'dalam', 'dan', 'yang', 'untuk', 
-    'dengan', 'terhadap', 'sebagai', 'oleh', 'a', 'an', 'the', 'of', 'in'
+    'dengan', 'terhadap', 'sebagai', 'oleh', 'a', 'an', 'the', 'of', 'in',
+    'by', 'about', 'after', 'before', 'at', 'as', 'or', 'but', 'is', 'on'
   ];
 
   return str
@@ -657,10 +704,9 @@ function toTitleCase(str) {
 
       // Jika kata ada di daftar singkatan, kembalikan versi huruf besar semua
       if (acronyms.includes(cleanWord)) {
-        // Kita gunakan .toUpperCase() pada 'word' asli agar tanda bacanya tidak hilang
         return word.toUpperCase();
       }
-
+      
       // Jika kata ada di daftar minorWords dan bukan kata pertama, biarkan kecil
       if (index > 0 && minorWords.includes(word)) {
         return word;
@@ -675,43 +721,6 @@ function toTitleCase(str) {
 // ========================================
 // Category Counts
 // ========================================
-
-const categoryCounts = {
-  'Artikel': 712,
-  'Monografi': 26,
-  'Laporan Penelitian': 248,
-  'Konferensi': 134,
-  'Skripsi': 19866,
-  'Tesis': 1490,
-  'Disertasi': 170,
-  'Lainnya': 2252
-};
-
-function updateCategoryBadges() {
-  const total = Object.values(categoryCounts).reduce((a, b) => a + b, 0);
-  
-  // Update "Semua Tipe"
-  const allBadge = document.getElementById('badge-all');
-  if (allBadge) allBadge.textContent = formatNumber(total);
-  
-  // Update each category
-  Object.entries(categoryCounts).forEach(([type, count]) => {
-    const badgeId = 'badge-' + type.replace(/\s+/g, '');
-    const badge = document.getElementById(badgeId);
-    if (badge) badge.textContent = formatNumber(count);
-  });
-}
-
-function toTitleCase(str) {
-  if (!str) return '';
-  // Kata-kata kecil yang sebaiknya tidak kapital (opsional)
-  const minorWords = ['di', 'ke', 'dari', 'pada', 'dalam', 'dan', 'yang', 'untuk', 'dengan'];
-  
-  return str.toLowerCase().split(' ').map((word, index) => {
-    if (index > 0 && minorWords.includes(word)) return word;
-    return word.charAt(0).toUpperCase() + word.slice(1);
-  }).join(' ');
-}
 
 // ========================================
 // Global Click Handler
@@ -737,13 +746,43 @@ document.addEventListener('click', (e) => {
 // ========================================
 // Initialization
 // ========================================
+
+function initSortDisplay() {
+  const sortFilterValue = document.querySelector('.custom-select-value');
+  if (sortFilterValue && state.sortBy === 'newest') {
+    sortFilterValue.textContent = 'Paling Baru';
+  }
+}
+
+function handleMobileDropdown() {
+  const isMobile = window.innerWidth <= 768;
+  const headerLeft = document.querySelector('.header-left');
+  
+  if (isMobile) {
+    if (filterDropdown && filterDropdown.parentNode !== document.body) {
+      document.body.appendChild(filterDropdown);
+    }
+  } else {
+    if (filterDropdown && headerLeft && filterDropdown.parentNode !== headerLeft) {
+      headerLeft.appendChild(filterDropdown);
+    }
+  }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initSidebarMode();
-  updateCategoryBadges();
+  initSortDisplay();
+  handleMobileDropdown();
   loadStatistics();
-  searchInput.focus();
+  if (window.innerWidth > 768) {
+    searchInput.focus();
+  }
   search();
+});
+
+window.addEventListener('resize', () => {
+  handleMobileDropdown();
 });
 
 // ========================================
@@ -751,6 +790,9 @@ window.addEventListener('DOMContentLoaded', () => {
 // ========================================
 
 const filterOptions = document.querySelectorAll('.filter-option');
+let filterDebounceTimer;
+let touchStartY = 0;
+let touchEndY = 0;
 
 function toggleFilterDropdown(e) {
   e.stopPropagation();
@@ -774,12 +816,42 @@ function toggleFilterDropdown(e) {
 function closeFilterDropdown() {
   filterDropdown.classList.remove('open');
   filterBtn.classList.remove('active');
+  filterDropdown.style.transform = '';
   
   if (filterDropdownOverlay) {
     filterDropdownOverlay.classList.remove('active');
   }
   
   document.body.style.overflow = '';
+}
+
+// Swipe down gesture detection untuk mobile
+if (filterDropdown) {
+  filterDropdown.addEventListener('touchstart', (e) => {
+    touchStartY = e.touches[0].clientY;
+    touchEndY = touchStartY;
+    filterDropdown.style.transition = 'none';
+  }, { passive: true });
+  
+  filterDropdown.addEventListener('touchmove', (e) => {
+    touchEndY = e.touches[0].clientY;
+    const swipeDistance = touchEndY - touchStartY;
+    if (swipeDistance > 0 && filterDropdown.scrollTop <= 0) {
+      filterDropdown.style.transform = `translateY(${swipeDistance}px)`;
+      if(e.cancelable) e.preventDefault();
+    }
+  }, { passive: false });
+  
+  filterDropdown.addEventListener('touchend', () => {
+    filterDropdown.style.transition = '';
+    const swipeDistance = touchEndY - touchStartY;
+    // Jika swipe down lebih dari 50px dan user tidak sedang scroll, tutup dropdown
+    if (swipeDistance > 80 && filterDropdown.scrollTop <= 0) {
+      closeFilterDropdown();
+    } else {
+      filterDropdown.style.transform = '';
+    }
+  }, { passive: true });
 }
 
 filterBtn.addEventListener('click', toggleFilterDropdown);
@@ -802,6 +874,11 @@ filterOptions.forEach(option => {
     state.selectedType = type;
     state.page = 1;
     closeFilterDropdown();
-    search();
+
+    // Debounce filter option click
+    clearTimeout(filterDebounceTimer);
+    filterDebounceTimer = setTimeout(() => {
+      search();
+    }, 300);
   });
 });

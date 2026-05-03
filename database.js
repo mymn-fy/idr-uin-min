@@ -121,6 +121,8 @@ async function initDatabase(db) {
       await asyncDb.run(`UPDATE documents SET type = 'Laporan Penelitian' WHERE (link LIKE '%laporan_penelitian%' OR link LIKE '%laporan=5fpenelitian%') AND type = 'Lainnya'`, []);
       await asyncDb.run(`UPDATE documents SET type = 'Konferensi' WHERE (link LIKE '%conference_item%' OR link LIKE '%conference=5fitem%') AND type = 'Lainnya'`, []);
       await asyncDb.run(`UPDATE documents SET type = 'Disertasi' WHERE link LIKE '%disertasi%' AND type = 'Lainnya'`, []);
+      await asyncDb.run(`UPDATE documents SET type = 'Buku' WHERE link LIKE '%book%' AND type = 'Lainnya'`, []);
+      await asyncDb.run(`UPDATE documents SET type = 'Buku' WHERE type = 'Book'`, []);
       console.log('✓ Data lama berhasil disinkronisasi dengan tipe filter.');
     } catch (e) {
       console.error('Sinkronisasi tipe gagal:', e);
@@ -381,7 +383,7 @@ async function searchDocumentsWithFTS(db, query, typeFilter, page = 1, limit = 1
     // 1. Logika Pencarian (Query)
     if (query && query.trim() !== '') {
       params.push(`%${query.trim()}%`);
-      whereClauses.push(`(title ILIKE $${params.length} OR content ILIKE $${params.length} OR description ILIKE $${params.length})`);
+      whereClauses.push(`(title ILIKE $${params.length} OR content ILIKE $${params.length} OR description ILIKE $${params.length} OR author ILIKE $${params.length})`);
     }
 
     // 2. Logika Filter Tipe
@@ -401,10 +403,14 @@ async function searchDocumentsWithFTS(db, query, typeFilter, page = 1, limit = 1
     // Prioritaskan tipe dokumen tertentu
     const typePriority = `(CASE WHEN type = 'Skripsi' THEN 1 WHEN type = 'Tesis' THEN 2 WHEN type = 'Disertasi' THEN 3 ELSE 4 END)`;
 
-    let orderBy = `ORDER BY ${typePriority}, created_at DESC`; // default newest
-    if (sortBy === 'relevance' && query) {
-      // Prioritaskan yang judulnya mirip di awal
-      orderBy = `ORDER BY (CASE WHEN title ILIKE $1 THEN 1 ELSE 2 END), ${typePriority}, created_at DESC`;
+    let orderBy = `ORDER BY year DESC NULLS LAST, created_at DESC`; // default newest
+    if (sortBy === 'relevance') {
+      if (query) {
+        // Prioritaskan yang judulnya mirip di awal
+        orderBy = `ORDER BY (CASE WHEN title ILIKE $1 THEN 1 ELSE 2 END), ${typePriority}, created_at DESC`;
+      } else {
+        orderBy = `ORDER BY ${typePriority}, created_at DESC`;
+      }
     }
 
     // 5. Ambil Data dengan Limit & Offset

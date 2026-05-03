@@ -536,6 +536,29 @@ body {
   display: none;
 }
 
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s ease;
+}
+
+.github-link:hover {
+  color: var(--accent);
+  text-shadow: 0 0 12px var(--accent-ring);
+}
+
+.github-link svg {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.github-link:hover svg {
+  transform: scale(1.15) rotate(8deg);
+}
+
 /* ========================================
    Top Header
    ======================================== */
@@ -548,12 +571,20 @@ body {
   justify-content: space-between;
   gap: 16px;
   padding: 16px 24px;
-  background: var(--bg-primary);
-  border-bottom: 1px solid var(--border-color);
-  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.7);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
   transition:
     background-color 0.3s ease,
     border-color 0.3s ease;
+}
+
+[data-theme="dark"] .top-header {
+  background: rgba(10, 10, 10, 0.85);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
 }
 
 .header-left {
@@ -872,6 +903,9 @@ body {
 }
 
 .result-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
   background: var(--surface);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
@@ -923,6 +957,7 @@ body {
 
 .result-card:hover .result-title {
   color: var(--accent);
+  color: var(--type-color, var(--accent));
 }
 
 .result-badge {
@@ -947,6 +982,10 @@ body {
 .result-badge--monografi {
   background: rgba(245, 158, 11, 0.12);
   color: #f59e0b;
+}
+.result-badge--buku {
+  background: rgba(139, 92, 246, 0.12);
+  color: #8b5cf6;
 }
 .result-badge--laporan {
   background: rgba(59, 130, 246, 0.12);
@@ -1026,6 +1065,17 @@ body {
   color: var(--text-secondary);
   margin-bottom: 10px;
   font-style: italic;
+}
+
+/* ========================================
+   Arabic Text Override
+   ======================================== */
+.arabic-text {
+  font-family:
+    "Traditional Arabic", "Amiri", "Sakkal Majalla", "Noto Naskh Arabic", serif;
+  font-size: 1.4em; /* Ukuran dibesarkan sedikit karena font Arab bawaan biasanya kecil */
+  line-height: 1.6;
+  unicode-bidi: isolate;
 }
 
 .result-content {
@@ -1322,7 +1372,6 @@ body {
 
   .top-header {
     padding: 12px 16px;
-    backdrop-filter: none; /* Mencegah filter dropdown (fixed) terperangkap di header */
   }
 
   .content-area {
@@ -2123,13 +2172,15 @@ body {
     width: 100%;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     transform: translateY(100%);
-    background: var(--surface-raised); /* Pastikan ada background */
-    border: 1px solid var(--border-color); /* Border solid */
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3); /* Shadow atas */
+    background: var(--surface-raised);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.3);
     z-index: 1000;
     overflow-y: auto;
-    overflow: hidden; /* Mencegah double scrollbar */
-    padding: 0 0 24px 0; /* Memberi ruang (safe area) di bagian bawah */
+    overflow-x: hidden;
+    padding: 0 0 32px 0;
+    max-height: 85vh;
+    transition: transform 0.3s cubic-bezier(0.33, 0.66, 0.66, 1);
   }
 
   .filter-dropdown.open {
@@ -2157,25 +2208,35 @@ body {
   .filter-dropdown::before {
     content: "";
     display: block;
-    width: 40px;
-    height: 4px;
+    width: 48px;
+    height: 5px;
     background: var(--border-strong);
-    border-radius: 2px;
-    margin: 12px auto 8px;
+    border-radius: 3px;
+    margin: 16px auto 12px;
+    opacity: 0.6;
   }
 
   /* Spacing list yang lebih lega di mobile */
   .filter-dropdown-header {
-    padding: 12px 16px;
+    padding: 16px 20px 12px;
+    font-size: 16px;
+    font-weight: 700;
+    position: sticky;
+    top: 0;
+    background: var(--surface-raised);
+    z-index: 10;
+    border-bottom: 1px solid var(--border-color);
   }
 
   .filter-dropdown-list {
-    padding: 0 16px;
-    max-height: 60vh;
+    padding: 8px 0;
+    max-height: 65vh;
   }
 
   .filter-option {
-    padding: 12px 16px; /* Area sentuh jari lebih besar */
+    padding: 14px 20px;
+    margin: 0 4px;
+    border-radius: var(--radius-md);
   }
 }
 

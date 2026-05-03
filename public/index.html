@@ -84,47 +84,42 @@
           <li class="nav-item" data-type="all" data-label="Semua Tipe">
             <span class="material-symbols-rounded nav-icon">apps</span>
             <span class="nav-text">Semua Tipe</span>
-            <span class="nav-badge" id="badge-all">0</span>
           </li>
           <li class="nav-item" data-type="Artikel" data-label="Artikel">
             <span class="material-symbols-rounded nav-icon">article</span>
             <span class="nav-text">Artikel</span>
-            <span class="nav-badge" id="badge-Artikel">0</span>
           </li>
           <li class="nav-item" data-type="Monografi" data-label="Monografi">
             <span class="material-symbols-rounded nav-icon">book</span>
             <span class="nav-text">Monografi</span>
-            <span class="nav-badge" id="badge-Monografi">0</span>
+          </li>
+          <li class="nav-item" data-type="Buku" data-label="Buku">
+            <span class="material-symbols-rounded nav-icon">library_books</span>
+            <span class="nav-text">Buku</span>
           </li>
           <li class="nav-item" data-type="Laporan Penelitian" data-label="Laporan Penelitian">
             <span class="material-symbols-rounded nav-icon">biotech</span>
             <span class="nav-text">Laporan Penelitian</span>
-            <span class="nav-badge" id="badge-LaporanPenelitian">0</span>
           </li>
           <li class="nav-item" data-type="Konferensi" data-label="Konferensi">
             <span class="material-symbols-rounded nav-icon">groups</span>
             <span class="nav-text">Konferensi</span>
-            <span class="nav-badge" id="badge-Konferensi">0</span>
           </li>
           <li class="nav-item active" data-type="Skripsi" data-label="Skripsi">
             <span class="material-symbols-rounded nav-icon">menu_book</span>
             <span class="nav-text">Skripsi</span>
-            <span class="nav-badge" id="badge-Skripsi">0</span>
           </li>
           <li class="nav-item" data-type="Tesis" data-label="Tesis">
             <span class="material-symbols-rounded nav-icon">workspace_premium</span>
             <span class="nav-text">Tesis</span>
-            <span class="nav-badge" id="badge-Tesis">0</span>
           </li>
           <li class="nav-item" data-type="Disertasi" data-label="Disertasi">
             <span class="material-symbols-rounded nav-icon">verified</span>
             <span class="nav-text">Disertasi</span>
-            <span class="nav-badge" id="badge-Disertasi">0</span>
           </li>
           <li class="nav-item" data-type="Lainnya" data-label="Lainnya">
             <span class="material-symbols-rounded nav-icon">more_horiz</span>
             <span class="nav-text">Lainnya</span>
-            <span class="nav-badge" id="badge-Lainnya">0</span>
           </li>
         </ul>
       </div>
@@ -136,7 +131,12 @@
         <span class="nav-text">Sinkronisasi Data</span>
       </button>
       <div class="sidebar-meta">
-        <span class="nav-text">IDR UIN Antasari</span>
+        <a href="https://github.com/mymn-fy" class="github-link" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+          </svg>
+          mymn-fy
+        </a>
       </div>
     </div>
   </aside>
@@ -154,7 +154,7 @@
           <input 
             type="text" 
             id="searchInput" 
-            placeholder="Cari judul, atau kata kunci..." 
+            placeholder="Cari judul, penulis, atau kata kunci..." 
             autocomplete="off"
           >
           <button class="clear-search" id="clearSearch" aria-label="Clear search">
@@ -176,55 +176,51 @@
               <span class="material-symbols-rounded filter-check">check</span>
               <span class="material-symbols-rounded filter-icon">apps</span>
               <span class="filter-label">Semua Tipe</span>
-              <span class="filter-count">24.9k</span>
             </label>
             <label class="filter-option" data-type="Artikel">
               <span class="material-symbols-rounded filter-check">check</span>
               <span class="material-symbols-rounded filter-icon">article</span>
               <span class="filter-label">Artikel</span>
-              <span class="filter-count">712</span>
             </label>
             <label class="filter-option" data-type="Monografi">
               <span class="material-symbols-rounded filter-check">check</span>
               <span class="material-symbols-rounded filter-icon">book</span>
               <span class="filter-label">Monografi</span>
-              <span class="filter-count">26</span>
+            </label>
+            <label class="filter-option" data-type="Buku">
+              <span class="material-symbols-rounded filter-check">check</span>
+              <span class="material-symbols-rounded filter-icon">library_books</span>
+              <span class="filter-label">Buku</span>
             </label>
             <label class="filter-option" data-type="Laporan Penelitian">
               <span class="material-symbols-rounded filter-check">check</span>
               <span class="material-symbols-rounded filter-icon">biotech</span>
               <span class="filter-label">Laporan Penelitian</span>
-              <span class="filter-count">248</span>
             </label>
             <label class="filter-option" data-type="Konferensi">
               <span class="material-symbols-rounded filter-check">check</span>
               <span class="material-symbols-rounded filter-icon">groups</span>
               <span class="filter-label">Konferensi</span>
-              <span class="filter-count">134</span>
             </label>
             <label class="filter-option" data-type="Skripsi">
               <span class="material-symbols-rounded filter-check">check</span>
               <span class="material-symbols-rounded filter-icon">menu_book</span>
               <span class="filter-label">Skripsi</span>
-              <span class="filter-count">19.9k</span>
             </label>
             <label class="filter-option" data-type="Tesis">
               <span class="material-symbols-rounded filter-check">check</span>
               <span class="material-symbols-rounded filter-icon">workspace_premium</span>
               <span class="filter-label">Tesis</span>
-              <span class="filter-count">1.5k</span>
             </label>
             <label class="filter-option" data-type="Disertasi">
               <span class="material-symbols-rounded filter-check">check</span>
               <span class="material-symbols-rounded filter-icon">verified</span>
               <span class="filter-label">Disertasi</span>
-              <span class="filter-count">170</span>
             </label>
             <label class="filter-option" data-type="Lainnya">
               <span class="material-symbols-rounded filter-check">check</span>
               <span class="material-symbols-rounded filter-icon">more_horiz</span>
               <span class="filter-label">Lainnya</span>
-              <span class="filter-count">2.3k</span>
             </label>
           </div>
         </div>
@@ -287,15 +283,15 @@
         <div class="results-actions">
           <div class="custom-select" id="sortFilterWrapper">
   <button class="custom-select-trigger" id="sortFilterTrigger">
-    <span class="custom-select-value">Paling Relevan</span>
+    <span class="custom-select-value">Paling Baru</span>
     <span class="material-symbols-rounded custom-select-arrow">expand_more</span>
   </button>
   <div class="custom-select-dropdown" id="sortFilterDropdown">
-    <div class="custom-select-option active" data-value="relevance">
+    <div class="custom-select-option" data-value="relevance">
       <span class="material-symbols-rounded">sort</span>
       <span>Paling Relevan</span>
     </div>
-    <div class="custom-select-option" data-value="newest">
+    <div class="custom-select-option active" data-value="newest">
       <span class="material-symbols-rounded">schedule</span>
       <span>Paling Baru</span>
     </div>
