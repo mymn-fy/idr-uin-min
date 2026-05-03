@@ -1,5 +1,4 @@
 @import url("https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Aref+Ruqaa:wght@400;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&display=swap");
 
 /* ========================================
    Design Tokens & Variables
@@ -605,6 +604,8 @@ body {
   justify-content: center;
   width: 40px;
   height: 40px;
+  min-width: 40px;
+  min-height: 40px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   background: var(--surface);
@@ -698,7 +699,7 @@ body {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .theme-toggle {
@@ -761,6 +762,16 @@ body {
 
 .stat-icon .material-symbols-rounded {
   font-size: 24px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-variation-settings:
+    "FILL" 1,
+    "wght" 300,
+    "GRAD" 0,
+    "opsz" 24;
 }
 
 .stat-info {
@@ -1083,6 +1094,14 @@ body {
   align-items: center;
   gap: 4px;
   word-break: break-all;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  width: fit-content;
+}
+
+.result-url:hover {
+  color: var(--accent);
+  text-decoration: underline;
 }
 
 .result-url::before {
@@ -1130,22 +1149,227 @@ body {
 }
 
 /* ========================================
+   Document Modal
+   ======================================== */
+.document-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.document-modal.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.document-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.document-modal-container {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-top: 4px solid var(--type-color, var(--accent));
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
+  z-index: 1001;
+  transform: translateY(20px) scale(0.98);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.document-modal.active .document-modal-container {
+  transform: translateY(0) scale(1);
+}
+
+.modal-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 0.5px solid var(--border-color);
+}
+
+.document-modal-close {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface-hover);
+  border: 0.5px solid var(--border-color);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.document-modal-close:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+  transform: rotate(90deg);
+}
+
+.document-modal-body {
+  padding: 1.25rem 1.5rem;
+  overflow-y: auto;
+}
+
+.document-modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.document-modal-body::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 8px;
+}
+
+.modal-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.modal-arabic-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.ar-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--surface-hover);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 0.5px solid var(--border-color);
+  margin-top: 6px;
+  letter-spacing: 0.05em;
+}
+
+.modal-arabic-title {
+  flex: 1;
+  color: var(--text-secondary);
+}
+
+.modal-title-separator {
+  border-top: 0.5px dashed var(--border-strong);
+  margin: 16px 0;
+  opacity: 0.5;
+}
+
+.modal-latin-title {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+.modal-meta-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.modal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-secondary);
+  border: 0.5px solid var(--border-color);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.modal-chip svg {
+  color: var(--text-muted);
+}
+
+.modal-sticky-footer {
+  padding: 16px 24px;
+  background: var(--bg-secondary);
+  border-top: 0.5px solid var(--border-color);
+  margin-top: auto;
+}
+
+.modal-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  background: var(--type-color, var(--accent));
+  color: white;
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.modal-action-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.modal-action-btn .material-symbols-rounded {
+  font-size: 18px;
+}
+
+/* ========================================
    Arabic Text Override
    ======================================== */
 .arabic-text {
   font-family:
-    /* Pindahkan "Aref Ruqaa" ke urutan pertama jika ingin berganti ke font tersebut */
-    "Aref Ruqaa", "Amiri", "Traditional Arabic", "Geeza Pro",
-    "Noto Naskh Arabic", "Droid Arabic Naskh", serif;
-    "Amiri", "Traditional Arabic", "Geeza Pro", "Noto Naskh Arabic", "Droid Arabic Naskh", serif;
+    "Amiri", "Traditional Arabic", "Geeza Pro", "Noto Naskh Arabic",
+    "Droid Arabic Naskh", serif;
   font-size: 1.4em; /* Ukuran dibesarkan sedikit karena font Arab bawaan biasanya kecil */
+  font-weight: 200 !important; /* Memaksa teks Arab menjadi reguler/tipis secara mutlak */
   line-height: 1.6;
   unicode-bidi: isolate;
 }
 
-/* Gunakan Aref Ruqaa khusus untuk judul agar terlihat lebih estetik (kaligrafi) */
 .result-title .arabic-text {
-  font-family: "Aref Ruqaa", "Amiri", "Traditional Arabic", serif;
+  font-family: "Amiri", "Traditional Arabic", serif;
+}
+
+/* ========================================
+   Aref Ruqaa Mode (Diaktifkan via tombol)
+   ======================================== */
+body.font-aref .arabic-text,
+body.font-aref .result-title .arabic-text {
+  font-family:
+    "Aref Ruqaa", "Amiri", "Traditional Arabic", "Geeza Pro",
+    "Noto Naskh Arabic", "Droid Arabic Naskh", serif;
 }
 
 .result-content {
@@ -1292,7 +1516,7 @@ body {
    ======================================== */
 .toast-container {
   position: fixed;
-  top: 20px;
+  bottom: 20px;
   right: 20px;
   z-index: 1000;
   display: flex;
@@ -1554,6 +1778,17 @@ body {
     align-items: center;
     justify-content: center;
     padding: 0;
+  }
+
+  /* Penyesuaian modal khusus layar mobile */
+  .document-modal {
+    padding: 12px;
+  }
+  .document-modal-container {
+    max-height: 95vh;
+  }
+  .document-modal-body {
+    padding: 20px;
   }
 
   .toast-container {
@@ -2327,7 +2562,7 @@ body {
 .header-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex: 1;
   /* Hapus max-width atau ganti jadi 100% */
   max-width: 100%;
@@ -2345,6 +2580,10 @@ body {
 /* Mobile: filter button tetap visible */
 @media (max-width: 768px) {
   .header-left {
+    gap: 8px;
+  }
+
+  .header-actions {
     gap: 8px;
   }
 
