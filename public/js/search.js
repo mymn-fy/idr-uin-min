@@ -490,6 +490,11 @@ function renderResults() {
     const badgeClass = `result-badge--${typeKey}`;
     const typeColor = getTypeColor(result.type);
 
+    // Perbaiki typo/kesalahan ketik dari data sumber asli sebelum di-render
+    const cleanTitle = fixTypos(result.title);
+    const cleanDesc = fixTypos(result.description);
+    const cleanContent = fixTypos(result.content);
+
     const metaItems = [];
     if (result.author) {
       metaItems.push(`<span class="result-meta-item"><span class="material-symbols-rounded">person</span> ${escapeHtml(formatAuthorNames(result.author))}</span>`);
@@ -499,18 +504,18 @@ function renderResults() {
     }
     const metaHtml = metaItems.length ? `<div class="result-meta">${metaItems.join('')}</div>` : '';
 
-    const descHtml = result.description 
-      ? `<div class="result-description">${wrapArabic(highlightQuery(result.description, state.query))}</div>` 
+    const descHtml = cleanDesc 
+      ? `<div class="result-description">${wrapArabic(highlightQuery(cleanDesc, state.query))}</div>` 
       : '';
-    const contentHtml = result.content 
-      ? `<div class="result-content">${wrapArabic(highlightQuery(result.content, state.query))}</div>` 
+    const contentHtml = cleanContent 
+      ? `<div class="result-content">${wrapArabic(highlightQuery(cleanContent, state.query))}</div>` 
       : '';
 
     card.style.setProperty('--type-color', typeColor);
 
     card.innerHTML = `
       <div class="result-header">
-        <h3 class="result-title">${wrapArabic(escapeHtml(toTitleCase(result.title)))}</h3>
+        <h3 class="result-title">${wrapArabic(escapeHtml(toTitleCase(cleanTitle)))}</h3>
         ${result.type ? `<span class="result-badge ${badgeClass}">${escapeHtml(result.type)}</span>` : ''}
       </div>
       <div class="result-url">${escapeHtml(result.link)}</div>
@@ -629,6 +634,25 @@ function wrapArabic(text) {
   // Disertai Kuantifier (+) agar performa cepat dan aman dari memori browser yang freeze.
   const arabicRegex = /([\u0600-\u06FF\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+(?:(?:[\s0-9.,\-\/()\[\]{}:'"=+]|<\/?mark>|&(?:[a-z]+|#\d+);)+[\u0600-\u06FF\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)*)/g;
   return text.replace(arabicRegex, '<span class="arabic-text" dir="rtl">$1</span>');
+}
+
+function fixTypos(text) {
+  if (!text) return '';
+  
+  // Kamus perbaikan teks bawaan dari sumber aslinya yang salah ketik/terbalik
+  const corrections = [
+    // Memperbaiki teks "Al-Qira'ah Al-Rasyidah" yang terbalik harfiah (termasuk spasi invisible)
+    { error: /ةديشرلا[\s\u200B-\u200F\uFEFF]*ةءارقلا/g, fix: 'القراءة الرشيدة' },
+    { error: /Qur;an/gi, fix: "Qur'an" },
+    { error: /Qira;ah/gi, fix: "Qira'ah" }
+  ];
+  
+  let fixedText = text;
+  corrections.forEach(c => {
+    fixedText = fixedText.replace(c.error, c.fix);
+  });
+  
+  return fixedText;
 }
 
 function escapeHtml(text) {
