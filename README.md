@@ -44,7 +44,8 @@ idr-uin-min/
 ├── server.js
 ├── database.js
 ├── scraper.js
-├── scraper-cli.js
+├── enrich-from-list.js
+├── DATABASE.md
 ├── package.json
 ├── vercel.json
 └── README.md
@@ -160,6 +161,14 @@ Mengambil statistik database
 }
 ```
 
+### GET /api/scraped-data
+
+Mengambil data yang sudah di-scrape dari database (dengan parameter `limit` opsional, default 100).
+
+### GET /api/documents/:id
+
+Mengambil detail spesifik dari satu dokumen berdasarkan ID.
+
 ## Database Schema (PostgreSQL)
 
 ### Tabel: documents
@@ -195,13 +204,15 @@ Setiap kali melakukan insert data (melalui scraping):
 
 ## Menggunakan Scraper via CLI
 
-Jalankan scraper sinkronisasi dari terminal PowerShell:
+Anda dapat melakukan proses sinkronisasi dan _enrichment_ data secara aman menggunakan script `enrich-from-list.js` langsung dari terminal:
 
-```powershell
-.\scrape-sync.ps1
+```bash
+# Menjalankan sinkronisasi dan pembaruan DB (Upsert)
+node enrich-from-list.js
+
+# Menjalankan simulasi (Dry Run - melihat data tanpa mengubah database)
+node enrich-from-list.js --dry-run
 ```
-
-(Catatan: pastikan server lokal berjalan di port 3000 terlebih dahulu).
 
 ## License
 
