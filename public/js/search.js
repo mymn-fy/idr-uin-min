@@ -625,9 +625,9 @@ function highlightQuery(content, query) {
 
 function wrapArabic(text) {
   if (!text) return '';
-  // Regex menangkap huruf Arab dan spasi di antaranya 
-  // Tidak menangkap tag HTML sehingga aman digabungkan dengan highlight
-  const arabicRegex = /([\u0600-\u06FF\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+(?:[\s]+[\u0600-\u06FF\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)*)/g;
+  // Regex menangkap kalimat Arab utuh (termasuk angka dan tanda baca di tengahnya).
+  // Disertai Kuantifier (+) agar performa cepat dan aman dari memori browser yang freeze.
+  const arabicRegex = /([\u0600-\u06FF\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+(?:(?:[\s0-9.,\-\/()\[\]{}:'"=+]|<\/?mark>|&(?:[a-z]+|#\d+);)+[\u0600-\u06FF\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)*)/g;
   return text.replace(arabicRegex, '<span class="arabic-text" dir="rtl">$1</span>');
 }
 
