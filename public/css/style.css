@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Aref+Ruqaa:wght@400;700&display=swap");
 
 /* ========================================
    Design Tokens & Variables
@@ -1075,8 +1075,9 @@ body {
    ======================================== */
 .arabic-text {
   font-family:
-    "Aref Ruqaa", "Traditional Arabic", "Geeza Pro", "Noto Naskh Arabic",
-    "Droid Arabic Naskh", "Amiri", serif;
+    /* Pindahkan "Aref Ruqaa" ke urutan pertama jika ingin berganti ke font tersebut */
+    "Amiri", "Aref Ruqaa", "Traditional Arabic", "Geeza Pro",
+    "Noto Naskh Arabic", "Droid Arabic Naskh", serif;
   font-size: 1.4em; /* Ukuran dibesarkan sedikit karena font Arab bawaan biasanya kecil */
   line-height: 1.6;
   unicode-bidi: isolate;
