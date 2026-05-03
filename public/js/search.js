@@ -728,6 +728,11 @@ function wrapArabic(text) {
 function fixTypos(text) {
   if (!text) return '';
   
+  // 1. Normalisasi Unicode (NFKC)
+  // Mengubah karakter "Arabic Presentation Forms" (biasanya akibat copy-paste dari PDF)
+  // kembali menjadi huruf Arab standar, sehingga font Aref Ruqaa bisa merendernya secara utuh.
+  let fixedText = text.normalize('NFKC');
+
   // Kamus perbaikan teks bawaan dari sumber aslinya yang salah ketik/terbalik
   const corrections = [
     // Memperbaiki teks "Al-Qira'ah Al-Rasyidah" yang terbalik harfiah (termasuk spasi invisible)
@@ -738,7 +743,6 @@ function fixTypos(text) {
     { error: /\(([^()]+?)\s*\((دراسة\s*داللية|دراسةداللية)\./g, fix: '$1 (دراسة داللية)' }
   ];
   
-  let fixedText = text;
   corrections.forEach(c => {
     fixedText = fixedText.replace(c.error, c.fix);
   });
