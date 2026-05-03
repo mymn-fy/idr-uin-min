@@ -504,18 +504,21 @@ function renderResults() {
     }
     const metaHtml = metaItems.length ? `<div class="result-meta">${metaItems.join('')}</div>` : '';
 
+    const descDir = getTextDirection(cleanDesc);
     const descHtml = cleanDesc 
-      ? `<div class="result-description">${wrapArabic(highlightQuery(cleanDesc, state.query))}</div>` 
+      ? `<div class="result-description" dir="${descDir}">${wrapArabic(highlightQuery(cleanDesc, state.query))}</div>` 
       : '';
+      
+    const contentDir = getTextDirection(cleanContent);
     const contentHtml = cleanContent 
-      ? `<div class="result-content">${wrapArabic(highlightQuery(cleanContent, state.query))}</div>` 
+      ? `<div class="result-content" dir="${contentDir}">${wrapArabic(highlightQuery(cleanContent, state.query))}</div>` 
       : '';
 
     card.style.setProperty('--type-color', typeColor);
 
     card.innerHTML = `
       <div class="result-header">
-        <h3 class="result-title">${wrapArabic(escapeHtml(toTitleCase(cleanTitle)))}</h3>
+        <h3 class="result-title">${formatTitle(cleanTitle)}</h3>
         ${result.type ? `<span class="result-badge ${badgeClass}">${escapeHtml(result.type)}</span>` : ''}
       </div>
       <div class="result-url">${escapeHtml(result.link)}</div>
@@ -541,12 +544,58 @@ function renderPagination() {
   pageNumbersDiv.innerHTML = '';
   const pages = getPageNumbers(state.page, state.totalPages);
 
+  const totalEllipsis = pages.filter(p => p === '...').length;
+  let ellipsisCount = 0;
+
   pages.forEach(p => {
     if (p === '...') {
-      const span = document.createElement('span');
-      span.className = 'page-number ellipsis';
-      span.textContent = '...';
-      pageNumbersDiv.appendChild(span);
+      ellipsisCount++;
+      
+      // Jika ada 2 tanda '...', jadikan yang pertama sebagai teks titik biasa,
+      // dan yang terakhir (atau satu-satunya) sebagai kotak input "Ke.."
+      if (totalEllipsis > 1 && ellipsisCount === 1) {
+        const span = document.createElement('span');
+        span.className = 'page-number ellipsis';
+        span.textContent = '...';
+        pageNumbersDiv.appendChild(span);
+        return; // Lanjut ke perulangan berikutnya
+      }
+
+      // Ganti titik tiga (...) dengan kotak input "Ke.."
+      const jumpWrapper = document.createElement('div');
+      jumpWrapper.className = 'page-jump-wrapper';
+
+      const jumpInput = document.createElement('input');
+      jumpInput.type = 'number';
+      jumpInput.className = 'page-input';
+      jumpInput.min = 1;
+      jumpInput.max = state.totalPages;
+      jumpInput.placeholder = 'Ke..';
+      jumpInput.title = `Lompat ke halaman (1 - ${state.totalPages})`;
+
+      jumpInput.addEventListener('change', () => {
+        let val = parseInt(jumpInput.value, 10);
+        if (!isNaN(val) && val >= 1 && val <= state.totalPages && val !== state.page) {
+          state.page = val;
+          search();
+        } else if (jumpInput.value !== '') {
+          jumpInput.value = '';
+          showToast(`Masukkan angka 1 - ${state.totalPages}`, 'error');
+        }
+      });
+
+      // FIX: Otomatis scroll ke atas saat input di-fokus pada mobile
+      // agar tidak tertutup keyboard.
+      jumpInput.addEventListener('focus', (e) => {
+        if (window.innerWidth <= 768) {
+          setTimeout(() => {
+            e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 300);
+        }
+      });
+
+      jumpWrapper.appendChild(jumpInput);
+      pageNumbersDiv.appendChild(jumpWrapper);
     } else {
       const btn = document.createElement('button');
       btn.className = `page-number ${p === state.page ? 'active' : ''}`;
@@ -604,6 +653,34 @@ function getTypeKey(type) {
   return map[type] || 'lainnya';
 }
 
+function getTextDirection(text) {
+  if (!text) return 'ltr';
+  // Abaikan angka/simbol, temukan HURUF pertama (Latin atau Arab) dalam teks
+  const match = text.match(/[a-zA-Z\u0600-\u06FF]/);
+  // Jika huruf pertama adalah Arab, jadikan 'rtl' (Kanan), selain itu 'ltr' (Kiri)
+  return match && /[\u0600-\u06FF]/.test(match[0]) ? 'rtl' : 'ltr';
+}
+
+function formatTitle(title) {
+  if (!title) return '';
+  
+  // Pisahkan judul jika mengandung tanda "=" (biasanya format dwibahasa)
+  if (title.includes('=')) {
+    // Filter untuk mencegah bagian kosong jika ada "=" berlebih di awal/akhir
+    const parts = title.split('=').filter(p => p.trim().length > 0);
+    const formattedParts = parts.map(part => {
+      const trimmed = part.trim();
+      const dir = getTextDirection(trimmed);
+      return `<div class="title-part" dir="${dir}">${wrapArabic(escapeHtml(toTitleCase(trimmed)))}</div>`;
+    });
+    // Gabungkan kembali menggunakan span sebagai garis pemisah secara vertikal
+    return formattedParts.join('<div class="title-separator"></div>');
+  }
+  
+  const dir = getTextDirection(title);
+  return `<div class="title-part" dir="${dir}">${wrapArabic(escapeHtml(toTitleCase(title)))}</div>`;
+}
+
 function getTypeColor(type) {
   const map = {
     'Artikel': '#10b981',
@@ -633,7 +710,19 @@ function wrapArabic(text) {
   // Regex menangkap kalimat Arab utuh (termasuk angka dan tanda baca di tengahnya).
   // Disertai Kuantifier (+) agar performa cepat dan aman dari memori browser yang freeze.
   const arabicRegex = /([\u0600-\u06FF\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+(?:(?:[\s0-9.,\-\/()\[\]{}:'"=+]|<\/?mark>|&(?:[a-z]+|#\d+);)+[\u0600-\u06FF\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)*)/g;
-  return text.replace(arabicRegex, '<span class="arabic-text" dir="rtl">$1</span>');
+  
+  const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+  
+  return text.replace(arabicRegex, (match) => {
+    // Mengubah angka Latin (0-9) menjadi angka Timur/Arab (٠-٩) khusus pada porsi teks Arab.
+    // Regex /(<[^>]+>|&#?\w+;)|([0-9])/g digunakan untuk MELINDUNGI tag HTML (cth: <mark>)
+    // dan karakter entitas HTML agar angkanya tidak ikut terkonversi dan merusak tampilan web.
+    const converted = match.replace(/(<[^>]+>|&#?\w+;)|([0-9])/g, (m, htmlOrEntity, digit) => {
+      if (htmlOrEntity) return htmlOrEntity; // Abaikan jika ini adalah tag/entitas HTML
+      return arabicDigits[digit];            // Ubah menjadi angka Arab jika ini sekadar angka biasa
+    });
+    return `<span class="arabic-text" dir="rtl">${converted}</span>`;
+  });
 }
 
 function fixTypos(text) {
@@ -644,7 +733,9 @@ function fixTypos(text) {
     // Memperbaiki teks "Al-Qira'ah Al-Rasyidah" yang terbalik harfiah (termasuk spasi invisible)
     { error: /ةديشرلا[\s\u200B-\u200F\uFEFF]*ةءارقلا/g, fix: 'القراءة الرشيدة' },
     { error: /Qur;an/gi, fix: "Qur'an" },
-    { error: /Qira;ah/gi, fix: "Qira'ah" }
+    { error: /Qira;ah/gi, fix: "Qira'ah" },
+    // Memperbaiki typo bawaan penulis: kurung ganda dan titik di akhir judul Arab
+    { error: /\(([^()]+?)\s*\((دراسة\s*داللية|دراسةداللية)\./g, fix: '$1 (دراسة داللية)' }
   ];
   
   let fixedText = text;

@@ -896,6 +896,42 @@ body {
   }
 }
 
+/* Styling untuk kotak Jump to Page */
+.page-jump-wrapper {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 2px;
+}
+
+.page-input {
+  width: 50px;
+  height: 36px;
+  padding: 0 4px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  outline: none;
+  transition: all 0.2s ease;
+  -moz-appearance: textfield; /* Sembunyikan panah atas-bawah (spinners) di Firefox */
+}
+
+/* Sembunyikan panah atas-bawah (spinners) di Chrome/Safari */
+.page-input::-webkit-outer-spin-button,
+.page-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.page-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
 /* ========================================
    Results
    ======================================== */
@@ -956,6 +992,28 @@ body {
   line-height: 1.4;
   flex: 1;
   word-break: break-word;
+}
+
+.title-part {
+  display: block;
+}
+
+.title-part[dir="rtl"],
+.result-description[dir="rtl"],
+.result-content[dir="rtl"] {
+  text-align: right;
+}
+
+.title-part[dir="ltr"],
+.result-description[dir="ltr"],
+.result-content[dir="ltr"] {
+  text-align: left;
+}
+
+.title-separator {
+  display: block;
+  border-top: 2px dashed var(--border-strong);
+  margin: 12px 0;
 }
 
 .result-card:hover .result-title {
@@ -1465,6 +1523,16 @@ body {
     order: 0; /* Tetap di tengah */
     display: flex;
     gap: 4px;
+  }
+
+  /* Penyesuaian jarak input agar lebih rapat di layar HP */
+  .page-jump-wrapper {
+    margin: 0 2px;
+    padding: 0;
+  }
+  .page-input {
+    width: 42px;
+    padding: 0 2px;
   }
 
   #nextPage {
