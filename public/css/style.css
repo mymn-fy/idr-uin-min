@@ -407,34 +407,6 @@ body {
   padding-right: 0;
 }
 
-.sidebar.collapsed .nav-item::after {
-  content: attr(data-label);
-  position: absolute;
-  left: calc(100% + 10px);
-  top: 50%;
-  transform: translateY(-50%);
-  background: var(--surface-raised);
-  color: var(--text-primary);
-  padding: 8px 14px;
-  border-radius: var(--radius-md);
-  font-size: 13px;
-  font-weight: 500;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.2s ease;
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--border-color);
-  z-index: 200;
-  pointer-events: none;
-}
-
-.sidebar.collapsed .nav-item:hover::after {
-  opacity: 1;
-  visibility: visible;
-  left: calc(100% + 8px);
-}
-
 /* ========================================
    Sidebar Footer
    ======================================== */
@@ -1828,6 +1800,11 @@ body.font-aref .result-title .arabic-text {
   justify-content: center;
   gap: 0;
   width: auto;
+  overflow: visible;
+}
+
+.sidebar.collapsed .sidebar-nav {
+  overflow: visible;
 }
 
 .sidebar.collapsed .logo-text {
@@ -1875,7 +1852,15 @@ body.font-aref .result-title .arabic-text {
 }
 
 /* Tooltip (hanya jika BUKAN expand-on-hover) */
-.sidebar.collapsed:not(.expand-hover) .nav-item::after {
+.sidebar.collapsed:not(.expand-hover) .nav-item,
+.sidebar.collapsed:not(.expand-hover) .sync-btn,
+.sidebar.collapsed:not(.expand-hover) .logo {
+  position: relative;
+}
+
+.sidebar.collapsed:not(.expand-hover) .nav-item::after,
+.sidebar.collapsed:not(.expand-hover) .sync-btn::after,
+.sidebar.collapsed:not(.expand-hover) .logo::after {
   content: attr(data-label);
   position: absolute;
   left: calc(100% + 12px);
@@ -1897,7 +1882,9 @@ body.font-aref .result-title .arabic-text {
   pointer-events: none;
 }
 
-.sidebar.collapsed:not(.expand-hover) .nav-item:hover::after {
+.sidebar.collapsed:not(.expand-hover) .nav-item:hover::after,
+.sidebar.collapsed:not(.expand-hover) .sync-btn:hover::after,
+.sidebar.collapsed:not(.expand-hover) .logo:hover::after {
   opacity: 1;
   visibility: visible;
   left: calc(100% + 8px);
@@ -1909,6 +1896,7 @@ body.font-aref .result-title .arabic-text {
   padding: 10px 0;
   gap: 0;
   margin: 0 8px;
+  overflow: visible;
 }
 
 .sidebar.collapsed .sync-btn .nav-text {
@@ -2118,17 +2106,6 @@ body.font-aref .result-title .arabic-text {
 .control-option input[type="radio"]:checked + .control-radio::after {
   opacity: 1;
   transform: scale(1);
-}
-
-/* HAPUS SEMUA TOOLTIP PUTIH SAAT COLLAPSED */
-.sidebar.collapsed .nav-item::after,
-.sidebar.collapsed:not(.expand-hover) .nav-item::after,
-.sidebar.collapsed .nav-item:hover::after,
-.sidebar.collapsed:not(.expand-hover) .nav-item:hover::after {
-  display: none !important;
-  content: none !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
 }
 
 /* Hover effect saja: icon scale + warna */
