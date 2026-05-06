@@ -177,6 +177,9 @@ function initFontMode() {
 }
 
 function toggleFontMode() {
+  // Menghapus toast sebelumnya agar tidak menumpuk saat tombol diklik cepat/berkali-kali
+  toastContainer.innerHTML = '';
+
   const isAref = document.body.classList.contains('font-aref');
   if (isAref) {
     document.body.classList.remove('font-aref');
@@ -297,6 +300,11 @@ function closeMobileSidebar() {
 // Toast Notifications
 // ========================================
 function showToast(message, type = 'info') {
+  // Batasi maksimal 3 toast yang tampil bersamaan untuk seluruh aplikasi
+  while (toastContainer.children.length >= 3) {
+    toastContainer.removeChild(toastContainer.firstElementChild);
+  }
+
   const toast = document.createElement('div');
   toast.className = `toast toast--${type}`;
 
@@ -315,8 +323,11 @@ function showToast(message, type = 'info') {
   toastContainer.appendChild(toast);
 
   setTimeout(() => {
-    toast.classList.add('removing');
-    toast.addEventListener('animationend', () => toast.remove());
+    // Cegah error jika elemen toast sudah dihapus sebelumnya
+    if (toast.parentNode === toastContainer) {
+      toast.classList.add('removing');
+      toast.addEventListener('animationend', () => toast.remove());
+    }
   }, 4000);
 }
 
